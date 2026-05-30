@@ -1,9 +1,4 @@
 {
-  "version": 2,
   "buildCommand": "npx next build",
-  "outputDirectory": "out",
-  "installCommand": "npm install",
-  "routes": [
-    { "src": "/(.*)", "dest": "/$1" }
-  ]
+  "installCommand": "npm install"
 }
