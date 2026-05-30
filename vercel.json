@@ -1,6 +1,12 @@
 {
   "buildCommand": "npx next build",
   "outputDirectory": "out",
-  "framework": "nextjs",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "out" }
+    }
+  ]
 }
