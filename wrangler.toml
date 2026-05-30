@@ -1,0 +1,8 @@
+# Cloudflare Pages configuration
+# Deploy via: npx wrangler pages deploy out/ --project-name=pdftools
+# Or connect via Git on Cloudflare Dashboard: https://dash.cloudflare.com/
+
+# Build settings (for Git-connected Pages):
+#   Build command:   npx next build
+#   Build output dir: out
+#   Node version:     20.x
