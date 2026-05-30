@@ -310,6 +310,10 @@ const lazyProcessors: Record<string, () => Promise<ToolProcessor>> = {
   "html-to-pdf": async () => (await import("./office-processors")).htmlToPdfProcessor,
   "markdown-to-pdf": async () => (await import("./office-processors")).markdownToPdfProcessor,
   "heic-to-pdf": async () => (await import("./office-processors")).heicToPdfProcessor,
+  "edit-pdf": async () => (await import("./advanced-processors")).editPdfProcessor,
+  "organize-pdf": async () => (await import("./advanced-processors")).organizePdfProcessor,
+  "crop-pdf": async () => (await import("./advanced-processors")).cropPdfProcessor,
+  "ocr-pdf": async () => (await import("./advanced-processors")).ocrPdfProcessor,
   "pdf-to-word": async () => (await import("./office-processors")).wordToPdfProcessor, // placeholder – pdf→word is harder, reuse word→pdf for now
 };
 
