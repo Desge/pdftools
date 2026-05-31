@@ -264,5 +264,88 @@ export const epubToPdfProcessor: ToolProcessor = async (files, onProgress) => {
   }
 };
 
+// ─── PDF → DOCX processor ───
+
+/** PDF → DOCX: extract text via pdfjs-dist and generate a Word document via docx */
+export const pdfToWordProcessor: ToolProcessor = async (files, onProgress) => {
+  if (files.length !== 1) throw new Error("Please select exactly 1 PDF file.");
+  const file = files[0];
+  onProgress?.("Loading PDF...");
+  const buf = await file.arrayBuffer();
+
+  onProgress?.("Extracting text from PDF...");
+  const { default: pdfjsLib } = await import("pdfjs-dist");
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const pageTexts: string[] = [];
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    onProgress?.(`Reading page ${i}/${pdf.numPages}...`);
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items
+      .map((item) => ("str" in item ? item.str : ""))
+      .join(" ");
+    pageTexts.push(pageText);
+  }
+
+  onProgress?.("Building Word document...");
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, PageBreak } = await import("docx");
+
+  const children: import("docx").Paragraph[] = [];
+
+  for (let i = 0; i < pageTexts.length; i++) {
+    const text = pageTexts[i].trim();
+
+    // Page heading
+    children.push(
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: i > 0 ? 400 : 0, after: 200 },
+        children: [new TextRun({ text: `Page ${i + 1}`, bold: true, size: 28 })],
+      })
+    );
+
+    // Page content
+    if (text) {
+      children.push(
+        new Paragraph({
+          spacing: { after: 400 },
+          children: [new TextRun({ text, size: 24 })],
+        })
+      );
+    } else {
+      children.push(
+        new Paragraph({
+          spacing: { after: 400 },
+          children: [new TextRun({ text: "[No extractable text on this page]", italics: true, color: "888888", size: 24 })],
+        })
+      );
+    }
+
+    // Page break (except after last page)
+    if (i < pageTexts.length - 1) {
+      children.push(new Paragraph({ children: [new PageBreak()] }));
+    }
+  }
+
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children,
+    }],
+  });
+
+  onProgress?.("Generating DOCX file...");
+  const blob = await Packer.toBlob(doc);
+  const arr = await blob.arrayBuffer();
+
+  const baseName = file.name.replace(/\.pdf$/i, "");
+  return {
+    message: `PDF converted to Word document (${pageTexts.length} page${pageTexts.length !== 1 ? "s" : ""}).`,
+    data: new Uint8Array(arr),
+    filename: `${baseName}.docx`,
+  };
+};
+
 // ─── Markdown → PDF implemented above using marked lib ───
 

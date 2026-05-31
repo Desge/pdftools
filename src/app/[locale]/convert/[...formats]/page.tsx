@@ -5,6 +5,7 @@ import { ALL_CONVERSIONS } from "@/lib/formats";
 import { conversionMeta, breadcrumbJsonLd } from "@/lib/seo";
 import { t, DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@/lib/i18n";
 import type { ConversionPair } from "@/lib/types";
+import { ConverterClient } from "./ConverterClient";
 
 // ─── generateStaticParams: all locales × top 200 conversions ───
 const STATIC_CONVERSIONS = ALL_CONVERSIONS.filter((c) => c.clientSide && c.quality >= 3).slice(0, 200);
@@ -91,19 +92,7 @@ export default async function ConversionPage({
 
       <section className="pb-12">
         <div className="mx-auto max-w-2xl px-4 sm:px-6">
-          {pair.clientSide ? (
-            <div className="rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-900">
-              <p className="mb-2 text-lg font-medium text-gray-700 dark:text-gray-300">
-                Drop your {pair.from.ext.toUpperCase()} file here
-              </p>
-              <p className="text-sm text-gray-500">or click to browse. Converts to {pair.to.ext.toUpperCase()}.</p>
-            </div>
-          ) : (
-            <div className="rounded-2xl border-2 border-dashed border-yellow-300 bg-yellow-50 p-12 text-center dark:border-yellow-800 dark:bg-yellow-950/20">
-              <p className="mb-2 text-lg font-medium text-yellow-800 dark:text-yellow-400">{dict.convert.comingSoon}</p>
-              <p className="text-sm text-yellow-700 dark:text-yellow-500">{dict.convert.comingSoonDesc}</p>
-            </div>
-          )}
+          <ConverterClient pair={pair} locale={locale} />
         </div>
       </section>
 

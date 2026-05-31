@@ -27,6 +27,11 @@ const CropPdfWorkspace = dynamic(
   { ssr: false, loading: LoadingSkeleton }
 );
 
+const EditPdfWorkspace = dynamic(
+  () => import("@/components/tools/edit-pdf-workspace").then((m) => ({ default: m.EditPdfWorkspace })),
+  { ssr: false, loading: LoadingSkeleton }
+);
+
 // ─── Slug → Component mapping ───
 const SPECIALIZED_WORKSPACES: Record<string, React.ComponentType<any>> = {};
 
@@ -37,6 +42,8 @@ function getWorkspace(slug: string): React.ComponentType<any> {
       return OrganizePdfWorkspace;
     case "crop-pdf":
       return CropPdfWorkspace;
+    case "edit-pdf":
+      return EditPdfWorkspace;
     default:
       return GenericWorkspace;
   }

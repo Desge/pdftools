@@ -2,7 +2,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { TOOLS, getTool } from "@/lib/tools";
-import { toolMeta, toolJsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/seo";
+import { toolMeta, toolJsonLd, breadcrumbJsonLd, faqJsonLd, howToJsonLd } from "@/lib/seo";
 import { ToolCard } from "@/components/ui/tool-card";
 import { ToolWorkspaceLoader } from "@/components/tools/tool-workspace-loader";
 import { t, DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@/lib/i18n";
@@ -63,6 +63,11 @@ export default async function ToolPage({
         { name: tool.title, url: `${prefix}/tools/${tool.slug}` },
       ]),
       faqJsonLd(faqs),
+      howToJsonLd(tool.title, [
+        { name: dict.toolPage.step1Title, text: dict.toolPage.step1Desc },
+        { name: dict.toolPage.step2Title, text: dict.toolPage.step2Desc },
+        { name: dict.toolPage.step3Title, text: dict.toolPage.step3Desc },
+      ]),
     ],
   };
 

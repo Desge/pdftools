@@ -314,7 +314,8 @@ const lazyProcessors: Record<string, () => Promise<ToolProcessor>> = {
   "organize-pdf": async () => (await import("./advanced-processors")).organizePdfProcessor,
   "crop-pdf": async () => (await import("./advanced-processors")).cropPdfProcessor,
   "ocr-pdf": async () => (await import("./advanced-processors")).ocrPdfProcessor,
-  "pdf-to-word": async () => (await import("./office-processors")).wordToPdfProcessor, // placeholder – pdf→word is harder, reuse word→pdf for now
+  "epub-to-pdf": async () => (await import("./office-processors")).epubToPdfProcessor,
+  "pdf-to-word": async () => (await import("./office-processors")).pdfToWordProcessor,
 };
 
 /** Check if a tool has a processor implemented (including lazy) */

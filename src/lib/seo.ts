@@ -178,6 +178,19 @@ export function faqJsonLd(questions: { q: string; a: string }[]): object {
   };
 }
 
+/** JSON-LD HowTo schema for tool pages */
+export function howToJsonLd(name: string, steps: { name: string; text: string }[]): object {
+  return {
+    "@type": "HowTo",
+    name,
+    step: steps.map((s) => ({
+      "@type": "HowToStep",
+      name: s.name,
+      text: s.text,
+    })),
+  };
+}
+
 /** JSON-LD WebSite + Organization schemas (for homepage) */
 export function siteJsonLd(): object {
   return {
