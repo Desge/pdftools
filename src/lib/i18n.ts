@@ -64,6 +64,9 @@ export interface LangDict {
     comingSoon: string;
     pages: string;
     mb: string;
+    kb: string;
+    loadingFiles: string;
+    unexpectedError: string;
   };
   home: {
     breadcrumbHome: string;
@@ -160,6 +163,9 @@ const en: LangDict = {
     comingSoon: "🚧 This tool implementation is coming soon. The file handling infrastructure is ready.",
     pages: "pages",
     mb: "MB",
+    kb: "KB",
+    loadingFiles: "Loading files...",
+    unexpectedError: "An unexpected error occurred.",
   },
   home: {
     breadcrumbHome: "Home",
@@ -256,6 +262,9 @@ const zh: LangDict = {
     comingSoon: "🚧 此工具即将上线，文件处理基础架构已就绪。",
     pages: "页",
     mb: "MB",
+    kb: "KB",
+    loadingFiles: "正在加载文件...",
+    unexpectedError: "发生意外错误。",
   },
   home: {
     breadcrumbHome: "首页",

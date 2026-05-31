@@ -9,7 +9,7 @@ const SITE_DESCRIPTION =
   "Free online PDF tools that run entirely in your browser. Merge, split, compress, convert, and edit PDFs — no upload, no sign-up, 100% private.";
 
 /** Default OG image path */
-const OG_IMAGE = `${SITE_URL}/og-image.svg`;
+const OG_IMAGE = `${SITE_URL}/og-image.png`;
 
 /** Build hreflang alternates for a given path (e.g. "/tools/merge-pdf") */
 export function hreflangAlternates(path: string = ""): NonNullable<Metadata["alternates"]>["languages"] {
