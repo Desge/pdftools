@@ -5,7 +5,7 @@ import { ALL_CONVERSIONS } from "@/lib/formats";
 import { conversionMeta, breadcrumbJsonLd } from "@/lib/seo";
 import { t, DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@/lib/i18n";
 import type { ConversionPair } from "@/lib/types";
-import { ConverterClient } from "./ConverterClient";
+import { ConverterClientLoader } from "./ConverterClientLoader";
 
 // ─── generateStaticParams: all locales × top 200 conversions ───
 const STATIC_CONVERSIONS = ALL_CONVERSIONS.filter((c) => c.clientSide && c.quality >= 3).slice(0, 200);
@@ -25,10 +25,10 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: string; formats: string[] }>;
 }) {
-  const { formats } = await params;
+  const { locale, formats } = await params;
   const slug = formats.join("-to-");
   const pair = ALL_CONVERSIONS.find((c) => c.slug === slug);
-  return pair ? conversionMeta(pair) : {};
+  return pair ? conversionMeta(pair, locale) : {};
 }
 
 export default async function ConversionPage({
@@ -92,7 +92,7 @@ export default async function ConversionPage({
 
       <section className="pb-12">
         <div className="mx-auto max-w-2xl px-4 sm:px-6">
-          <ConverterClient pair={pair} locale={locale} />
+          <ConverterClientLoader pair={pair} locale={locale} />
         </div>
       </section>
 

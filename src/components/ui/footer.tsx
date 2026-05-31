@@ -52,6 +52,12 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-8 border-t border-gray-200 pt-8 dark:border-gray-800">
+          {/* Cross-site links */}
+          <div className="mb-6 flex flex-wrap items-center justify-center gap-4 text-sm">
+            <span className="font-semibold text-gray-700 dark:text-gray-300">Also try:</span>
+            <a href="https://image.toolconv.com" className="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-medium">🖼️ Image Tools</a>
+            <a href="https://unit.toolconv.com" className="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-medium">🔄 Unit Converter</a>
+          </div>
           <p className="text-center text-xs text-gray-500">
             &copy; {new Date().getFullYear()} toolconv. All PDF processing happens entirely in your browser.
             Your files are never uploaded to any server. &middot; 100% Privacy.

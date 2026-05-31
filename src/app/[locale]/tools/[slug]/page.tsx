@@ -23,21 +23,19 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: string; slug: string }>;
 }) {
-  const { slug } = await params;
+  const { locale, slug } = await params;
   const tool = getTool(slug);
-  return tool ? toolMeta(tool) : {};
+  return tool ? toolMeta(tool, locale) : {};
 }
 
 // ─── FAQ per tool ───
 function getFAQs(tool: ReturnType<typeof getTool>, dict: ReturnType<typeof t>): { q: string; a: string }[] {
   if (!tool) return [];
-  return [{
-    q: `Is ${tool.title} free to use?`,
-    a: `Yes! ${tool.title} is completely free. No sign-up, no limits, no watermarks. All processing happens locally in your browser.`,
-  }, {
-    q: "Do my files leave my device?",
-    a: "No. All toolconv tools process files entirely in your browser. Nothing is ever uploaded to any server.",
-  }];
+  return [
+    { q: dict.toolPage.faqQFree, a: dict.toolPage.faqAFree },
+    { q: dict.toolPage.faqQSafe, a: dict.toolPage.faqASafe },
+    { q: dict.toolPage.faqQSignup, a: dict.toolPage.faqASignup },
+  ];
 }
 
 export default async function ToolPage({
@@ -57,7 +55,7 @@ export default async function ToolPage({
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
-      toolJsonLd(tool),
+      toolJsonLd(tool, locale),
       breadcrumbJsonLd([
         { name: dict.toolPage.breadcrumbHome, url: prefix },
         { name: tool.title, url: `${prefix}/tools/${tool.slug}` },

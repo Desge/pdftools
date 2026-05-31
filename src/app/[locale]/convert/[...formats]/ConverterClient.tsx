@@ -283,3 +283,6 @@ export function ConverterClient({ pair, locale: localeProp }: ConverterClientPro
     </div>
   );
 }
+
+// Default export for next/dynamic compatibility
+export default ConverterClient;

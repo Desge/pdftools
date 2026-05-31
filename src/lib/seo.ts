@@ -12,12 +12,12 @@ const SITE_DESCRIPTION =
 const OG_IMAGE = `${SITE_URL}/og-image.png`;
 
 /** Build hreflang alternates for a given path (e.g. "/tools/merge-pdf") */
-export function hreflangAlternates(path: string = ""): NonNullable<Metadata["alternates"]>["languages"] {
+export function hreflangAlternates(path: string = "", locale: string = "en"): NonNullable<Metadata["alternates"]>["languages"] {
   const languages: Record<string, string> = {
-    "x-default": `${SITE_URL}/${path.replace(/^\//, "")}`,
+    "x-default": `${SITE_URL}/en${path}`,
   };
-  for (const locale of SUPPORTED_LOCALES) {
-    languages[locale] = `${SITE_URL}/${locale}${path}`;
+  for (const loc of SUPPORTED_LOCALES) {
+    languages[loc] = `${SITE_URL}/${loc}${path}`;
   }
   return languages;
 }
@@ -66,10 +66,10 @@ export function baseMeta(): Metadata {
 }
 
 /** SEO metadata for a tool page */
-export function toolMeta(tool: ToolMeta): Metadata {
+export function toolMeta(tool: ToolMeta, locale: string = "en"): Metadata {
   const title = tool.title;
   const desc = tool.description;
-  const url = `${SITE_URL}/tools/${tool.slug}/`;
+  const url = `${SITE_URL}/${locale}/tools/${tool.slug}/`;
 
   return {
     title,
@@ -77,7 +77,7 @@ export function toolMeta(tool: ToolMeta): Metadata {
     keywords: tool.keywords,
     alternates: {
       canonical: url,
-      languages: hreflangAlternates(`/tools/${tool.slug}/`),
+      languages: hreflangAlternates(`/tools/${tool.slug}/`, locale),
     },
     openGraph: {
       title: `${title} — Free Online PDF Tool | toolconv`,
@@ -96,10 +96,10 @@ export function toolMeta(tool: ToolMeta): Metadata {
 }
 
 /** SEO metadata for a conversion page */
-export function conversionMeta(pair: ConversionPair): Metadata {
+export function conversionMeta(pair: ConversionPair, locale: string = "en"): Metadata {
   const title = `${pair.from.name} to ${pair.to.name} Converter`;
   const desc = `Convert ${pair.from.name} to ${pair.to.name} online, free, and 100% private. No upload required — all processing happens in your browser.`;
-  const url = `${SITE_URL}/convert/${pair.slug}/`;
+  const url = `${SITE_URL}/${locale}/convert/${pair.slug}/`;
 
   return {
     title,
@@ -112,7 +112,7 @@ export function conversionMeta(pair: ConversionPair): Metadata {
     ],
     alternates: {
       canonical: url,
-      languages: hreflangAlternates(`/convert/${pair.slug}/`),
+      languages: hreflangAlternates(`/convert/${pair.slug}/`, locale),
     },
     openGraph: {
       title: `${title} — Free Online | toolconv`,
@@ -131,13 +131,13 @@ export function conversionMeta(pair: ConversionPair): Metadata {
 }
 
 /** JSON-LD WebApplication schema for a tool page */
-export function toolJsonLd(tool: ToolMeta): object {
+export function toolJsonLd(tool: ToolMeta, locale: string = "en"): object {
   return {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name: tool.title,
     description: tool.longDescription,
-    url: `${SITE_URL}/tools/${tool.slug}/`,
+    url: `${SITE_URL}/${locale}/tools/${tool.slug}/`,
     applicationCategory: "UtilityApplication",
     operatingSystem: "All",
     offers: {

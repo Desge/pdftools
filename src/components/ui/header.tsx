@@ -51,12 +51,40 @@ export function Header() {
   );
 }
 
+const LOCALE_LABELS: Record<string, string> = {
+  en: "EN",
+  zh: "中文",
+  ja: "日本語",
+  ko: "한국어",
+  es: "ES",
+  fr: "FR",
+  de: "DE",
+  pt: "PT",
+  ru: "RU",
+  ar: "AR",
+  hi: "HI",
+  it: "IT",
+};
+
 function LocaleSwitcher({ current }: { current: string }) {
-  const path = typeof window !== "undefined" ? window.location.pathname.replace(/^\/(en|zh)\//, "/") : "/";
+  const path =
+    typeof window !== "undefined"
+      ? window.location.pathname.replace(/^\/(en|zh|ja|ko|es|fr|de|pt|ru|ar|hi|it)\//, "/")
+      : "/";
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    window.location.href = `/${e.target.value}${path}`;
+  };
   return (
-    <div className="ml-2 flex gap-1">
-      {current !== "en" && <a href={`/en${path}`} className="rounded px-2 py-1 text-xs text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">EN</a>}
-      {current !== "zh" && <a href={`/zh${path}`} className="rounded px-2 py-1 text-xs text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">中文</a>}
-    </div>
+    <select
+      value={current}
+      onChange={handleChange}
+      className="ml-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600 hover:border-purple-300 focus:border-purple-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-purple-700"
+    >
+      {Object.entries(LOCALE_LABELS).map(([code, label]) => (
+        <option key={code} value={code}>
+          {label}
+        </option>
+      ))}
+    </select>
   );
 }
