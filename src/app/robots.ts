@@ -3,6 +3,6 @@ export const dynamic = "force-static";
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: { userAgent: "*", allow: "/", disallow: ["/api/"] },
-    sitemap: "https://pdflikes.com/sitemap.xml",
+    sitemap: "https://pdf.toolconv.com/sitemap.xml",
   };
 }

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import type { ToolMeta, ConversionPair } from "./types";
 
 const SITE_NAME = "PDFlikes — Free Online PDF Tools";
-const SITE_URL = "https://pdflikes.com"; // Change this to your domain
+const SITE_URL = "https://pdf.toolconv.com";
 const SITE_DESCRIPTION =
   "Free online PDF tools that run entirely in your browser. Merge, split, compress, convert, and edit PDFs — no upload, no sign-up, 100% private.";
 

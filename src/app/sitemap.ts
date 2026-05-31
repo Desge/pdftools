@@ -3,7 +3,7 @@ import { TOOLS } from "@/lib/tools";
 import { ALL_CONVERSIONS } from "@/lib/formats";
 import { SUPPORTED_LOCALES } from "@/lib/i18n";
 
-const SITE_URL = "https://pdflikes.com";
+const SITE_URL = "https://pdf.toolconv.com";
 export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
