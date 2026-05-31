@@ -7,6 +7,7 @@ import { TOOLS, getToolsByCategory } from "@/lib/tools";
 import { ToolCard } from "@/components/ui/tool-card";
 import { CategoryTabs } from "@/components/ui/category-tabs";
 import { t, DEFAULT_LOCALE, type LangDict } from "@/lib/i18n";
+import { siteJsonLd } from "@/lib/seo";
 import type { ToolCategory } from "@/lib/types";
 
 export default function HomePage() {
@@ -18,6 +19,7 @@ export default function HomePage() {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd()) }} />
       <HeroSection dict={dict} toolCount={TOOLS.length} />
       <ToolsSection dict={dict} tools={tools} activeCategory={activeCategory} onChange={setActiveCategory} />
       <PrivacySection dict={dict} />

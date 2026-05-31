@@ -36,7 +36,7 @@ function getFAQs(tool: ReturnType<typeof getTool>, dict: ReturnType<typeof t>): 
     a: `Yes! ${tool.title} is completely free. No sign-up, no limits, no watermarks. All processing happens locally in your browser.`,
   }, {
     q: "Do my files leave my device?",
-    a: "No. All PDFlikes tools process files entirely in your browser. Nothing is ever uploaded to any server.",
+    a: "No. All toolconv tools process files entirely in your browser. Nothing is ever uploaded to any server.",
   }];
 }
 
@@ -55,12 +55,15 @@ export default async function ToolPage({
   const prefix = `/${locale}`;
 
   const jsonLd = {
-    ...toolJsonLd(tool),
-    ...breadcrumbJsonLd([
-      { name: dict.toolPage.breadcrumbHome, url: prefix },
-      { name: tool.title, url: `${prefix}/tools/${tool.slug}` },
-    ]),
-    ...faqJsonLd(faqs),
+    "@context": "https://schema.org",
+    "@graph": [
+      toolJsonLd(tool),
+      breadcrumbJsonLd([
+        { name: dict.toolPage.breadcrumbHome, url: prefix },
+        { name: tool.title, url: `${prefix}/tools/${tool.slug}` },
+      ]),
+      faqJsonLd(faqs),
+    ],
   };
 
   return (

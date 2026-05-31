@@ -103,7 +103,7 @@ export interface LangDict {
 // ─── English ───
 const en: LangDict = {
   site: {
-    name: "PDFlikes",
+    name: "toolconv",
     tagline: "Free Online PDF Tools",
     description: "Free online PDF tools that run entirely in your browser. Merge, split, compress, convert, and edit PDFs — no upload, no sign-up, 100% private.",
   },
@@ -199,7 +199,7 @@ const en: LangDict = {
 // ─── 中文 ───
 const zh: LangDict = {
   site: {
-    name: "PDFlikes",
+    name: "toolconv",
     tagline: "免费在线 PDF 工具",
     description: "完全免费的在线 PDF 工具，所有处理均在浏览器中完成。合并、拆分、压缩、转换、编辑 PDF — 无需上传、无需注册、100% 保护隐私。",
   },

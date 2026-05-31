@@ -2,17 +2,36 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Header } from "@/components/ui/header";
 import { Footer } from "@/components/ui/footer";
-import { baseMeta } from "@/lib/seo";
+import { baseMeta, hreflangAlternates } from "@/lib/seo";
 import { SUPPORTED_LOCALES } from "@/lib/i18n";
 import "@/app/globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
-export const metadata: Metadata = baseMeta();
-
 export function generateStaticParams() {
   return SUPPORTED_LOCALES.map((locale) => ({ locale }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const lang = SUPPORTED_LOCALES.includes(locale as any) ? locale : "en";
+  return {
+    ...baseMeta(),
+    alternates: {
+      languages: {
+        ...hreflangAlternates("/"),
+        // For the homepage, locale-specific alternates are just locale prefixes
+        ...(lang === "en"
+          ? { zh: "https://pdf.toolconv.com/zh/" }
+          : { en: "https://pdf.toolconv.com/en/" }),
+      },
+    },
+  };
 }
 
 export default async function LocaleLayout({

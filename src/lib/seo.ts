@@ -1,11 +1,26 @@
 // ─── SEO Utilities: metadata, JSON-LD, titles ───
 import type { Metadata } from "next";
 import type { ToolMeta, ConversionPair } from "./types";
+import { SUPPORTED_LOCALES } from "./i18n";
 
-const SITE_NAME = "PDFlikes — Free Online PDF Tools";
+const SITE_NAME = "toolconv — Free Online PDF Tools";
 const SITE_URL = "https://pdf.toolconv.com";
 const SITE_DESCRIPTION =
   "Free online PDF tools that run entirely in your browser. Merge, split, compress, convert, and edit PDFs — no upload, no sign-up, 100% private.";
+
+/** Default OG image path */
+const OG_IMAGE = `${SITE_URL}/og-image.svg`;
+
+/** Build hreflang alternates for a given path (e.g. "/tools/merge-pdf") */
+export function hreflangAlternates(path: string = ""): NonNullable<Metadata["alternates"]>["languages"] {
+  const languages: Record<string, string> = {
+    "x-default": `${SITE_URL}/${path.replace(/^\//, "")}`,
+  };
+  for (const locale of SUPPORTED_LOCALES) {
+    languages[locale] = `${SITE_URL}/${locale}${path}`;
+  }
+  return languages;
+}
 
 /** Base metadata for the entire site */
 export function baseMeta(): Metadata {
@@ -13,7 +28,7 @@ export function baseMeta(): Metadata {
     metadataBase: new URL(SITE_URL),
     title: {
       default: SITE_NAME,
-      template: `%s | PDFlikes`,
+      template: `%s | toolconv`,
     },
     description: SITE_DESCRIPTION,
     keywords: [
@@ -25,22 +40,27 @@ export function baseMeta(): Metadata {
       "online pdf tools",
       "no upload pdf tools",
     ],
-    authors: [{ name: "PDFlikes" }],
+    authors: [{ name: "toolconv" }],
     openGraph: {
       type: "website",
       siteName: SITE_NAME,
       title: SITE_NAME,
       description: SITE_DESCRIPTION,
       url: SITE_URL,
+      images: [{ url: OG_IMAGE, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title: SITE_NAME,
       description: SITE_DESCRIPTION,
+      images: [OG_IMAGE],
     },
     robots: {
       index: true,
       follow: true,
+    },
+    icons: {
+      icon: "/favicon.ico",
     },
   };
 }
@@ -55,29 +75,34 @@ export function toolMeta(tool: ToolMeta): Metadata {
     title,
     description: desc,
     keywords: tool.keywords,
-    alternates: { canonical: url },
+    alternates: {
+      canonical: url,
+      languages: hreflangAlternates(`/tools/${tool.slug}/`),
+    },
     openGraph: {
-      title: `${title} — Free Online PDF Tool | PDFlikes`,
+      title: `${title} — Free Online PDF Tool | toolconv`,
       description: desc,
       url,
       type: "website",
+      images: [{ url: OG_IMAGE, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description: desc,
+      images: [OG_IMAGE],
     },
   };
 }
 
 /** SEO metadata for a conversion page */
 export function conversionMeta(pair: ConversionPair): Metadata {
-  const title = `${pair.from.name} to ${pair.to.name}`;
+  const title = `${pair.from.name} to ${pair.to.name} Converter`;
   const desc = `Convert ${pair.from.name} to ${pair.to.name} online, free, and 100% private. No upload required — all processing happens in your browser.`;
   const url = `${SITE_URL}/convert/${pair.slug}/`;
 
   return {
-    title: `${title} Converter`,
+    title,
     description: desc,
     keywords: [
       `${pair.from.ext} to ${pair.to.ext}`,
@@ -85,12 +110,22 @@ export function conversionMeta(pair: ConversionPair): Metadata {
       `convert ${pair.from.name.toLowerCase()} to ${pair.to.name.toLowerCase()}`,
       `free ${pair.from.name.toLowerCase()} to ${pair.to.name.toLowerCase()} converter`,
     ],
-    alternates: { canonical: url },
+    alternates: {
+      canonical: url,
+      languages: hreflangAlternates(`/convert/${pair.slug}/`),
+    },
     openGraph: {
-      title: `${title} Converter — Free Online | PDFlikes`,
+      title: `${title} — Free Online | toolconv`,
       description: desc,
       url,
       type: "website",
+      images: [{ url: OG_IMAGE, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: desc,
+      images: [OG_IMAGE],
     },
   };
 }
@@ -140,5 +175,35 @@ export function faqJsonLd(questions: { q: string; a: string }[]): object {
         text: q.a,
       },
     })),
+  };
+}
+
+/** JSON-LD WebSite + Organization schemas (for homepage) */
+export function siteJsonLd(): object {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        name: "toolconv",
+        url: SITE_URL,
+        description: SITE_DESCRIPTION,
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: `${SITE_URL}/en/?q={search_term_string}`,
+          },
+          "query-input": "required name=search_term_string",
+        },
+      },
+      {
+        "@type": "Organization",
+        name: "toolconv",
+        url: SITE_URL,
+        logo: OG_IMAGE,
+        description: SITE_DESCRIPTION,
+      },
+    ],
   };
 }

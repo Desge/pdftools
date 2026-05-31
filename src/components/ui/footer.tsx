@@ -53,7 +53,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-8 border-t border-gray-200 pt-8 dark:border-gray-800">
           <p className="text-center text-xs text-gray-500">
-            &copy; {new Date().getFullYear()} PDFlikes. All PDF processing happens entirely in your browser.
+            &copy; {new Date().getFullYear()} toolconv. All PDF processing happens entirely in your browser.
             Your files are never uploaded to any server. &middot; 100% Privacy.
           </p>
         </div>

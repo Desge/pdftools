@@ -22,7 +22,7 @@ export const editPdfProcessor: ToolProcessor = async (files, onProgress) => {
     const { width, height } = page.getSize();
 
     // 1. Add text at top-right corner (demo)
-    page.drawText("PDFlikes Edit", {
+    page.drawText("toolconv Edit", {
       x: width - 160,
       y: height - 25,
       size: 12,

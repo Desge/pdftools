@@ -17,7 +17,7 @@ export function Header() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         <Link href={prefix} className="flex items-center gap-2 text-xl font-bold">
           <span className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-500 px-2 py-1 text-white">PDF</span>
-          <span className="text-gray-900 dark:text-white">likes</span>
+          <span className="text-gray-900 dark:text-white">toolconv</span>
         </Link>
 
         <div className="hidden items-center gap-1 md:flex">
