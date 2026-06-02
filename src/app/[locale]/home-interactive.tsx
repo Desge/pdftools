@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { TOOLS, getToolsByCategory } from "@/lib/tools";
+import { VISIBLE_TOOLS, getToolsByCategory } from "@/lib/tools";
 import { ToolCard } from "@/components/ui/tool-card";
 import { CategoryTabs } from "@/components/ui/category-tabs";
 import { t, DEFAULT_LOCALE } from "@/lib/i18n";
@@ -16,7 +16,7 @@ export function InteractiveTools({
   const safeLocale = locale || DEFAULT_LOCALE;
   const dict = t(safeLocale as any);
   const [activeCategory, setActiveCategory] = useState<ToolCategory | "all">("all");
-  const tools = activeCategory === "all" ? TOOLS : getToolsByCategory(activeCategory);
+  const tools = activeCategory === "all" ? VISIBLE_TOOLS : getToolsByCategory(activeCategory).filter((t) => !t.requiresServer);
 
   return (
     <section id="all-tools" className="py-16 sm:py-20">

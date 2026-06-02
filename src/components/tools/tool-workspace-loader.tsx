@@ -77,6 +77,61 @@ const MergePdfWorkspace = dynamic(
   { ssr: false, loading: LoadingSkeleton }
 );
 
+const WordToPdfWorkspace = dynamic(
+  () => import("@/components/tools/word-to-pdf-workspace").then((m) => ({ default: m.WordToPdfWorkspace })),
+  { ssr: false, loading: LoadingSkeleton }
+);
+
+const ExcelToPdfWorkspace = dynamic(
+  () => import("@/components/tools/excel-to-pdf-workspace").then((m) => ({ default: m.ExcelToPdfWorkspace })),
+  { ssr: false, loading: LoadingSkeleton }
+);
+
+const HtmlToPdfWorkspace = dynamic(
+  () => import("@/components/tools/html-to-pdf-workspace").then((m) => ({ default: m.HtmlToPdfWorkspace })),
+  { ssr: false, loading: LoadingSkeleton }
+);
+
+const MarkdownToPdfWorkspace = dynamic(
+  () => import("@/components/tools/markdown-to-pdf-workspace").then((m) => ({ default: m.MarkdownToPdfWorkspace })),
+  { ssr: false, loading: LoadingSkeleton }
+);
+
+const PdfToJpgWorkspace = dynamic(
+  () => import("@/components/tools/pdf-to-jpg-workspace").then((m) => ({ default: m.PdfToJpgWorkspace })),
+  { ssr: false, loading: LoadingSkeleton }
+);
+
+const PdfToPngWorkspace = dynamic(
+  () => import("@/components/tools/pdf-to-png-workspace").then((m) => ({ default: m.PdfToPngWorkspace })),
+  { ssr: false, loading: LoadingSkeleton }
+);
+
+const JpgToPdfWorkspace = dynamic(
+  () => import("@/components/tools/jpg-to-pdf-workspace").then((m) => ({ default: m.JpgToPdfWorkspace })),
+  { ssr: false, loading: LoadingSkeleton }
+);
+
+const PageNumbersWorkspace = dynamic(
+  () => import("@/components/tools/page-numbers-workspace").then((m) => ({ default: m.PageNumbersWorkspace })),
+  { ssr: false, loading: LoadingSkeleton }
+);
+
+const HeicToPdfWorkspace = dynamic(
+  () => import("@/components/tools/heic-to-pdf-workspace").then((m) => ({ default: m.HeicToPdfWorkspace })),
+  { ssr: false, loading: LoadingSkeleton }
+);
+
+const OcrPdfWorkspace = dynamic(
+  () => import("@/components/tools/ocr-pdf-workspace").then((m) => ({ default: m.OcrPdfWorkspace })),
+  { ssr: false, loading: LoadingSkeleton }
+);
+
+const PdfToWordWorkspace = dynamic(
+  () => import("@/components/tools/pdf-to-word-workspace").then((m) => ({ default: m.PdfToWordWorkspace })),
+  { ssr: false, loading: LoadingSkeleton }
+);
+
 // ─── Slug → Component mapping ───
 
 function getWorkspace(slug: string): React.ComponentType<any> {
@@ -105,6 +160,28 @@ function getWorkspace(slug: string): React.ComponentType<any> {
       return CompressPdfWorkspace;
     case "merge-pdf":
       return MergePdfWorkspace;
+    case "word-to-pdf":
+      return WordToPdfWorkspace;
+    case "excel-to-pdf":
+      return ExcelToPdfWorkspace;
+    case "html-to-pdf":
+      return HtmlToPdfWorkspace;
+    case "markdown-to-pdf":
+      return MarkdownToPdfWorkspace;
+    case "pdf-to-jpg":
+      return PdfToJpgWorkspace;
+    case "pdf-to-png":
+      return PdfToPngWorkspace;
+    case "jpg-to-pdf":
+      return JpgToPdfWorkspace;
+    case "page-numbers":
+      return PageNumbersWorkspace;
+    case "heic-to-pdf":
+      return HeicToPdfWorkspace;
+    case "ocr-pdf":
+      return OcrPdfWorkspace;
+    case "pdf-to-word":
+      return PdfToWordWorkspace;
     default:
       return GenericWorkspace;
   }

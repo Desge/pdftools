@@ -299,6 +299,8 @@ const dict: LangDict = {
     hidePassword: "छिपाएं",
     protectPdf: "PDF सुरक्षित करें",
     unlockPdf: "अनलॉक करें",
+    pdfNotEncrypted: "यह PDF एन्क्रिप्टेड नहीं है",
+    unsupportedEncryption: "असमर्थित एन्क्रिप्शन प्रकार",
     incorrectPassword: "गलत पासवर्ड",
     // Compress PDF workspace
     compressLevels: {
@@ -326,6 +328,76 @@ const dict: LangDict = {
     removeFile: "फ़ाइल हटाएं",
     needAtLeastTwo: "मर्ज करने के लिए कम से कम 2 PDF फ़ाइलें जोड़ें",
     files: "फ़ाइलें",
+    // Shared option labels
+    pageSize: "पेज आकार",
+    a4: "A4",
+    letter: "Letter",
+    original: "मूल आकार",
+    orientation: "ओरिएंटेशन",
+    auto: "स्वचालित",
+    portrait: "पोर्ट्रेट",
+    landscape: "लैंडस्केप",
+    margins: "मार्जिन",
+    marginNone: "कोई नहीं",
+    marginNarrow: "संकीर्ण",
+    marginMedium: "मध्यम",
+    marginWide: "चौड़ा",
+    marginSmall: "छोटा",
+    marginLarge: "बड़ा",
+    remove: "हटाएं",
+    paperSize: "पेपर आकार",
+    // Page Numbers workspace
+    position: "स्थिति",
+    startNumber: "प्रारंभ संख्या",
+    formatDigits: "1, 2, 3",
+    formatPageX: "पेज 1, पेज 2",
+    formatXOfN: "1/N",
+    formatDashX: "—1—",
+    addPageNumbersError: "पृष्ठ संख्या जोड़ने में त्रुटि",
+    // Word to PDF workspace
+    parsingWord: "Word दस्तावेज़ पार्स किया जा रहा है...",
+    // Excel to PDF workspace
+    parsingSpreadsheet: "स्प्रेडशीट पार्स की जा रही है...",
+    // HTML to PDF workspace
+    loadingHtml: "HTML लोड हो रहा है...",
+    renderScale: "रेंडर स्केल",
+    // Markdown to PDF workspace
+    processingMarkdown: "Markdown प्रोसेस किया जा रहा है...",
+    codeHighlight: "कोड हाइलाइट",
+    on: "चालू",
+    off: "बंद",
+    // HEIC to PDF workspace
+    decodingHeic: "HEIC फ़ाइल डिकोड की जा रही है...",
+    // OCR PDF workspace
+    ocrInitializing: "आरंभ किया जा रहा है...",
+    ocrLoadingEngine: "OCR इंजन लोड हो रहा है...",
+    ocrLanguage: "भाषा",
+    ocrLangEn: "अंग्रेज़ी",
+    ocrLangZh: "चीनी + अंग्रेज़ी",
+    ocrLangJa: "जापानी + अंग्रेज़ी",
+    ocrOutputFormat: "आउटपुट फ़ॉर्मेट",
+    ocrFormatText: "सादा टेक्स्ट",
+    ocrFormatPdf: "टेक्स्ट परत के साथ PDF",
+    ocrProgress: (page, total) => `पृष्ठ ${page}/${total}`,
+    ocrError: "OCR प्रोसेसिंग में त्रुटि हुई",
+    // PDF to Word workspace
+    buildingWord: "Word दस्तावेज़ बनाया जा रहा है...",
+    generatingDocx: "DOCX फ़ाइल जनरेट की जा रही है...",
+    pageSeparator: "पृष्ठ विभाजक",
+    separatorPageBreak: "पेज ब्रेक",
+    separatorContinuous: "सतत",
+    includePageNumbers: "पृष्ठ संख्याएँ शामिल करें",
+    pdfToWordError: "Word में रूपांतरण के दौरान त्रुटि",
+    // Protect PDF workspace
+    encryptionAlgorithm: "एन्क्रिप्शन",
+    encryptAes256: "AES-256",
+    encryptRc4: "RC4 128 बिट",
+    encryptAes256Desc: "PDF 2.0 — अधिकतम सुरक्षा",
+    encryptRc4Desc: "पुराने PDF रीडर के साथ संगत",
+    permissions: "अनुमतियाँ",
+    allowPrinting: "प्रिंटिंग की अनुमति दें",
+    allowCopying: "टेक्स्ट कॉपी करने की अनुमति दें",
+    allowModifying: "संशोधन की अनुमति दें",
   },
   home: {
     breadcrumbHome: "Home",
@@ -357,6 +429,7 @@ const dict: LangDict = {
     faqQualityAns3: "गुणवत्ता आमतौर पर अच्छी होती है, हालांकि जटिल फ़ॉर्मेटिंग को सरल बनाया जा सकता है।",
     faqQualityAns2: "इस रूपांतरण प्रकार की सीमाएँ हैं। हम आउटपुट को सत्यापित करने की सलाह देते हैं।",
     quality: "गुणवत्ता",
+    subtitleGeneric: "PDF को विभिन्न प्रारूपों में और से रूपांतरित करें। मुफ्त, अपलोड आवश्यक नहीं, ब्राउज़र में काम करता है।",
     relatedConversions: "संबंधित रूपांतरण"
 },
   category: {

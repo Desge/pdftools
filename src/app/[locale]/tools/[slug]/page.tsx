@@ -1,7 +1,7 @@
 // ─── Locale-aware Tool Page: /[locale]/tools/[slug] ───
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { TOOLS, getTool } from "@/lib/tools";
+import { VISIBLE_TOOLS, getTool } from "@/lib/tools";
 import { toolJsonLd, breadcrumbJsonLd, faqJsonLd, howToJsonLd } from "@/lib/seo";
 import { ToolCard } from "@/components/ui/tool-card";
 import { ToolWorkspaceLoader } from "@/components/tools/tool-workspace-loader";
@@ -12,7 +12,7 @@ import { AdBanner } from "@/components/ads/AdBanner";
 export function generateStaticParams() {
   const params: { locale: string; slug: string }[] = [];
   for (const locale of SUPPORTED_LOCALES) {
-    for (const tool of TOOLS) {
+    for (const tool of VISIBLE_TOOLS) {
       params.push({ locale, slug: tool.slug });
     }
   }
@@ -26,7 +26,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, slug } = await params;
   const tool = getTool(slug);
-  if (!tool) return {};
+  if (!tool || tool.requiresServer) return {};
   const dict = t(locale);
   // Use localized title from dictionary, falling back to English tool.title
   const tTitle = dict.toolItems[slug]?.title || tool.title;
@@ -89,13 +89,13 @@ export default async function ToolPage({
 }) {
   const { locale, slug } = await params;
   const tool = getTool(slug);
-  if (!tool) notFound();
+  if (!tool || tool.requiresServer) notFound();
 
   const dict = t(locale);
   const tTitle = dict.toolItems[slug]?.title || tool.title;
   const tLongDesc = dict.toolItems[slug]?.longDescription || tool.longDescription;
   const faqs = getFAQs(tool, dict);
-  const related = TOOLS.filter((t) => t.category === tool.category && t.slug !== tool.slug).slice(0, 4);
+  const related = VISIBLE_TOOLS.filter((t) => t.category === tool.category && t.slug !== tool.slug).slice(0, 4);
   const prefix = `/${locale}`;
 
   const jsonLd = {

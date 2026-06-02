@@ -299,6 +299,8 @@ const dict: LangDict = {
     hidePassword: "숨기기",
     protectPdf: "PDF 보호",
     unlockPdf: "잠금 해제",
+    pdfNotEncrypted: "이 PDF는 암호화되지 않았습니다",
+    unsupportedEncryption: "지원되지 않는 암호화 유형",
     incorrectPassword: "비밀번호가 올바르지 않습니다",
     // Compress PDF workspace
     compressLevels: {
@@ -326,6 +328,76 @@ const dict: LangDict = {
     removeFile: "파일 제거",
     needAtLeastTwo: "병합하려면 PDF 파일을 2개 이상 추가하세요",
     files: "개 파일",
+    // Shared option labels
+    pageSize: "페이지 크기",
+    a4: "A4",
+    letter: "Letter",
+    original: "원본 크기",
+    orientation: "방향",
+    auto: "자동",
+    portrait: "세로",
+    landscape: "가로",
+    margins: "여백",
+    marginNone: "없음",
+    marginNarrow: "좁게",
+    marginMedium: "중간",
+    marginWide: "넓게",
+    marginSmall: "작게",
+    marginLarge: "크게",
+    remove: "제거",
+    paperSize: "용지 크기",
+    // Page Numbers workspace
+    position: "위치",
+    startNumber: "시작 번호",
+    formatDigits: "1, 2, 3",
+    formatPageX: "페이지 1, 페이지 2",
+    formatXOfN: "1/N",
+    formatDashX: "—1—",
+    addPageNumbersError: "페이지 번호를 추가하는 중 오류가 발생했습니다.",
+    // Word to PDF workspace
+    parsingWord: "Word 문서를 분석 중...",
+    // Excel to PDF workspace
+    parsingSpreadsheet: "스프레드시트를 분석 중...",
+    // HTML to PDF workspace
+    loadingHtml: "HTML을 불러오는 중...",
+    renderScale: "렌더링 배율",
+    // Markdown to PDF workspace
+    processingMarkdown: "Markdown을 처리 중...",
+    codeHighlight: "코드 하이라이트",
+    on: "켜기",
+    off: "끄기",
+    // HEIC to PDF workspace
+    decodingHeic: "HEIC 파일을 디코딩 중...",
+    // OCR PDF workspace
+    ocrInitializing: "초기화 중...",
+    ocrLoadingEngine: "OCR 엔진을 로딩 중...",
+    ocrLanguage: "언어",
+    ocrLangEn: "영어",
+    ocrLangZh: "중국어 + 영어",
+    ocrLangJa: "일본어 + 영어",
+    ocrOutputFormat: "출력 형식",
+    ocrFormatText: "일반 텍스트",
+    ocrFormatPdf: "텍스트 레이어가 있는 PDF",
+    ocrProgress: (page, total) => `${page}/${total} 페이지`,
+    ocrError: "OCR 처리 중 오류가 발생했습니다.",
+    // PDF to Word workspace
+    buildingWord: "Word 문서를 작성 중...",
+    generatingDocx: "DOCX 파일을 생성 중...",
+    pageSeparator: "페이지 구분선",
+    separatorPageBreak: "페이지 나누기",
+    separatorContinuous: "연속",
+    includePageNumbers: "페이지 번호 포함",
+    pdfToWordError: "Word로 변환하는 중 오류가 발생했습니다.",
+    // Protect PDF workspace
+    encryptionAlgorithm: "암호화",
+    encryptAes256: "AES-256",
+    encryptRc4: "RC4 128비트",
+    encryptAes256Desc: "PDF 2.0 — 최대 보안",
+    encryptRc4Desc: "구형 PDF 리더와 호환",
+    permissions: "권한",
+    allowPrinting: "인쇄 허용",
+    allowCopying: "텍스트 복사 허용",
+    allowModifying: "수정 허용",
   },
   home: {
     breadcrumbHome: "Home",
@@ -357,6 +429,7 @@ const dict: LangDict = {
     faqQualityAns3: "품질은 일반적으로 좋지만 복잡한 서식은 단순화될 수 있습니다.",
     faqQualityAns2: "이 변환 유형에는 제한 사항이 있습니다. 출력을 확인하는 것이 좋습니다.",
     quality: "품질",
+    subtitleGeneric: "PDF와 다양한 형식 간 변환. 무료, 업로드 불필요, 브라우저에서 완료.",
     relatedConversions: "관련 변환"
 },
   category: {

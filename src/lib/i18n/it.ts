@@ -299,6 +299,8 @@ const dict: LangDict = {
     hidePassword: "Nascondi",
     protectPdf: "Proteggi PDF",
     unlockPdf: "Sblocca",
+    pdfNotEncrypted: "Questo PDF non è crittografato",
+    unsupportedEncryption: "Tipo di crittografia non supportato",
     incorrectPassword: "Password errata",
     // Compress PDF workspace
     compressLevels: {
@@ -326,6 +328,76 @@ const dict: LangDict = {
     removeFile: "Rimuovi file",
     needAtLeastTwo: "Aggiungi almeno 2 file PDF da unire",
     files: "file",
+    // Shared option labels
+    pageSize: "Dimensioni pagina",
+    a4: "A4",
+    letter: "Letter",
+    original: "Dimensioni originali",
+    orientation: "Orientamento",
+    auto: "Automatico",
+    portrait: "Verticale",
+    landscape: "Orizzontale",
+    margins: "Margini",
+    marginNone: "Nessuno",
+    marginNarrow: "Stretto",
+    marginMedium: "Medio",
+    marginWide: "Largo",
+    marginSmall: "Piccolo",
+    marginLarge: "Grande",
+    remove: "Rimuovi",
+    paperSize: "Dimensioni carta",
+    // Page Numbers workspace
+    position: "Posizione",
+    startNumber: "Numero iniziale",
+    formatDigits: "1, 2, 3",
+    formatPageX: "Pagina 1, Pagina 2",
+    formatXOfN: "1/N",
+    formatDashX: "—1—",
+    addPageNumbersError: "Errore durante l'aggiunta dei numeri di pagina",
+    // Word to PDF workspace
+    parsingWord: "Analisi del documento Word in corso...",
+    // Excel to PDF workspace
+    parsingSpreadsheet: "Analisi del foglio di calcolo in corso...",
+    // HTML to PDF workspace
+    loadingHtml: "Caricamento HTML in corso...",
+    renderScale: "Scala di rendering",
+    // Markdown to PDF workspace
+    processingMarkdown: "Elaborazione Markdown in corso...",
+    codeHighlight: "Evidenziazione del codice",
+    on: "On",
+    off: "Off",
+    // HEIC to PDF workspace
+    decodingHeic: "Decodifica file HEIC in corso...",
+    // OCR PDF workspace
+    ocrInitializing: "Inizializzazione in corso...",
+    ocrLoadingEngine: "Caricamento motore OCR in corso...",
+    ocrLanguage: "Lingua",
+    ocrLangEn: "Inglese",
+    ocrLangZh: "Cinese + Inglese",
+    ocrLangJa: "Giapponese + Inglese",
+    ocrOutputFormat: "Formato di output",
+    ocrFormatText: "Testo semplice",
+    ocrFormatPdf: "PDF con livello di testo",
+    ocrProgress: (page, total) => `Pagina ${page}/${total}`,
+    ocrError: "Errore durante l'elaborazione OCR",
+    // PDF to Word workspace
+    buildingWord: "Creazione del documento Word in corso...",
+    generatingDocx: "Generazione del file DOCX in corso...",
+    pageSeparator: "Separatore di pagina",
+    separatorPageBreak: "Interruzione di pagina",
+    separatorContinuous: "Continuo",
+    includePageNumbers: "Includi numeri di pagina",
+    pdfToWordError: "Errore durante la conversione in Word",
+    // Protect PDF workspace
+    encryptionAlgorithm: "Crittografia",
+    encryptAes256: "AES-256",
+    encryptRc4: "RC4 128 bit",
+    encryptAes256Desc: "PDF 2.0 — Massima sicurezza",
+    encryptRc4Desc: "Compatibile con vecchi lettori PDF",
+    permissions: "Autorizzazioni",
+    allowPrinting: "Consenti stampa",
+    allowCopying: "Consenti copia testo",
+    allowModifying: "Consenti modifica",
   },
   home: {
     breadcrumbHome: "Home",
@@ -357,6 +429,7 @@ const dict: LangDict = {
     faqQualityAns3: "La qualità è generalmente buona, anche se la formattazione complessa potrebbe essere semplificata.",
     faqQualityAns2: "Questo tipo di conversione ha dei limiti. Ti consigliamo di verificare l'output.",
     quality: "Qualità",
+    subtitleGeneric: "Converti PDF da e verso vari formati. Gratuito, nessun caricamento, funziona nel browser.",
     relatedConversions: "Conversioni correlate"
 },
   category: {

@@ -299,6 +299,8 @@ const dict: LangDict = {
     hidePassword: "إخفاء",
     protectPdf: "حماية PDF",
     unlockPdf: "إلغاء القفل",
+    pdfNotEncrypted: "هذا PDF غير مشفر",
+    unsupportedEncryption: "نوع تشفير غير مدعوم",
     incorrectPassword: "كلمة المرور غير صحيحة",
     // Compress PDF workspace
     compressLevels: {
@@ -326,6 +328,76 @@ const dict: LangDict = {
     removeFile: "إزالة الملف",
     needAtLeastTwo: "أضف ملفي PDF على الأقل للدمج",
     files: "ملفات",
+    // Shared option labels
+    pageSize: "حجم الصفحة",
+    a4: "A4",
+    letter: "Letter",
+    original: "الحجم الأصلي",
+    orientation: "الاتجاه",
+    auto: "تلقائي",
+    portrait: "عمودي",
+    landscape: "أفقي",
+    margins: "الهوامش",
+    marginNone: "بلا",
+    marginNarrow: "ضيق",
+    marginMedium: "متوسط",
+    marginWide: "واسع",
+    marginSmall: "صغير",
+    marginLarge: "كبير",
+    remove: "إزالة",
+    paperSize: "حجم الورق",
+    // Page Numbers workspace
+    position: "الموضع",
+    startNumber: "رقم البداية",
+    formatDigits: "1, 2, 3",
+    formatPageX: "الصفحة 1, الصفحة 2",
+    formatXOfN: "1/N",
+    formatDashX: "—1—",
+    addPageNumbersError: "حدث خطأ أثناء إضافة أرقام الصفحات",
+    // Word to PDF workspace
+    parsingWord: "جارٍ تحليل مستند Word...",
+    // Excel to PDF workspace
+    parsingSpreadsheet: "جارٍ تحليل جدول البيانات...",
+    // HTML to PDF workspace
+    loadingHtml: "جارٍ تحميل HTML...",
+    renderScale: "مقياس العرض",
+    // Markdown to PDF workspace
+    processingMarkdown: "جارٍ معالجة Markdown...",
+    codeHighlight: "إبراز الكود",
+    on: "تشغيل",
+    off: "إيقاف",
+    // HEIC to PDF workspace
+    decodingHeic: "جارٍ فك تشفير ملف HEIC...",
+    // OCR PDF workspace
+    ocrInitializing: "جارٍ التهيئة...",
+    ocrLoadingEngine: "جارٍ تحميل محرك OCR...",
+    ocrLanguage: "اللغة",
+    ocrLangEn: "الإنجليزية",
+    ocrLangZh: "الصينية + الإنجليزية",
+    ocrLangJa: "اليابانية + الإنجليزية",
+    ocrOutputFormat: "تنسيق الإخراج",
+    ocrFormatText: "نص عادي",
+    ocrFormatPdf: "PDF مع طبقة نص",
+    ocrProgress: (page, total) => `الصفحة ${page}/${total}`,
+    ocrError: "حدث خطأ أثناء معالجة OCR",
+    // PDF to Word workspace
+    buildingWord: "جارٍ إنشاء مستند Word...",
+    generatingDocx: "جارٍ إنشاء ملف DOCX...",
+    pageSeparator: "فاصل الصفحات",
+    separatorPageBreak: "فاصل صفحات",
+    separatorContinuous: "مستمر",
+    includePageNumbers: "تضمين أرقام الصفحات",
+    pdfToWordError: "حدث خطأ أثناء التحويل إلى Word",
+    // Protect PDF workspace
+    encryptionAlgorithm: "التشفير",
+    encryptAes256: "AES-256",
+    encryptRc4: "RC4 128 بت",
+    encryptAes256Desc: "PDF 2.0 — أقصى أمان",
+    encryptRc4Desc: "متوافق مع قارئات PDF القديمة",
+    permissions: "الأذونات",
+    allowPrinting: "السماح بالطباعة",
+    allowCopying: "السماح بنسخ النص",
+    allowModifying: "السماح بالتعديل",
   },
   home: {
     breadcrumbHome: "Home",
@@ -357,6 +429,7 @@ const dict: LangDict = {
     faqQualityAns3: "الجودة جيدة بشكل عام، على الرغم من أن التنسيقات المعقدة قد يتم تبسيطها.",
     faqQualityAns2: "هذا النوع من التحويل له حدود. نوصي بالتحقق من الناتج.",
     quality: "الجودة",
+    subtitleGeneric: "تحويل PDF من وإلى صيغ مختلفة. مجاني، بدون رفع، يعمل في المتصفح.",
     relatedConversions: "تحويلات ذات صلة"
 },
   category: {

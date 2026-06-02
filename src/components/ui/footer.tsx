@@ -45,7 +45,7 @@ export function Footer({
             <ul className="space-y-2">
               <li><Link href={`${prefix}/convert/pdf-to-jpg`} className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">PDF to JPG</Link></li>
               <li><Link href={`${prefix}/convert/heic-to-pdf`} className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">HEIC to PDF</Link></li>
-              <li><Link href={`${prefix}/convert/markdown-to-pdf`} className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Markdown to PDF</Link></li>
+              <li><Link href={`${prefix}/convert/md-to-pdf`} className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Markdown to PDF</Link></li>
               <li><Link href={`${prefix}/convert/html-to-pdf`} className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">HTML to PDF</Link></li>
             </ul>
           </div>

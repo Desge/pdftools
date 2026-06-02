@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { TOOLS } from "@/lib/tools";
+import { VISIBLE_TOOLS } from "@/lib/tools";
 import { ALL_CONVERSIONS } from "@/lib/formats";
 import { SUPPORTED_LOCALES } from "@/lib/i18n";
 import { GUIDES } from "@/lib/guides";
@@ -68,7 +68,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     });
 
     // Tool pages
-    for (const tool of TOOLS) {
+    for (const tool of VISIBLE_TOOLS) {
       entries.push({
         url: `${SITE_URL}${prefix}/tools/${tool.slug}`,
         lastModified: new Date(),

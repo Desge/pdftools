@@ -1,5 +1,5 @@
 // ─── Protect PDF Workspace ───
-// Inline password input instead of prompt() — encrypt PDF with user-supplied password
+// Client-side PDF encryption using @pdfsmaller/pdf-encrypt (AES-256 / RC4, Web Crypto API)
 "use client";
 
 import { useState, useCallback } from "react";
@@ -8,11 +8,17 @@ import { FileDropzone } from "@/components/ui/file-dropzone";
 import { downloadBlob } from "@/lib/pdf-render";
 import { t } from "@/lib/i18n";
 
+type AlgorithmOption = "AES-256" | "RC4";
+
 export function ProtectPdfWorkspace() {
   const [file, setFile] = useState<File | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [algorithm, setAlgorithm] = useState<AlgorithmOption>("AES-256");
+  const [allowPrinting, setAllowPrinting] = useState(true);
+  const [allowCopying, setAllowCopying] = useState(false);
+  const [allowModifying, setAllowModifying] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Uint8Array | null>(null);
@@ -37,11 +43,11 @@ export function ProtectPdfWorkspace() {
 
     // Validate passwords
     if (!password) {
-      setError(dict.workspace.enterPassword || "Enter a password");
+      setError(dict.workspace.enterPassword);
       return;
     }
     if (password !== confirmPassword) {
-      setError(dict.workspace.passwordMismatch || "Passwords do not match");
+      setError(dict.workspace.passwordMismatch);
       return;
     }
 
@@ -49,26 +55,27 @@ export function ProtectPdfWorkspace() {
     setError(null);
 
     try {
-      const { PDFDocument } = await import("pdf-lib");
+      const { encryptPDF } = await import("@pdfsmaller/pdf-encrypt");
       const buffer = await file.arrayBuffer();
-      const doc = await PDFDocument.load(buffer);
+      const pdfBytes = new Uint8Array(buffer);
 
-      (doc as any).encrypt({
-        userPassword: password,
+      const encrypted = await encryptPDF(pdfBytes, password, {
         ownerPassword: password + "_owner",
-        permissions: { printing: "highResolution", modifying: false, copying: true },
-      } as any);
+        algorithm,
+        allowPrinting,
+        allowCopying,
+        allowModifying,
+      });
 
-      const resultBytes = await doc.save();
-      setResult(resultBytes);
+      setResult(encrypted);
       const baseName = file.name.replace(/\.pdf$/i, "");
-      downloadBlob(resultBytes, `${baseName}_protected.pdf`);
+      downloadBlob(encrypted, `${baseName}_protected.pdf`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : dict.workspace.processingFailed || "Processing failed");
+      setError(err instanceof Error ? err.message : dict.workspace.processingFailed);
     }
 
     setProcessing(false);
-  }, [file, password, confirmPassword]);
+  }, [file, password, confirmPassword, algorithm, allowPrinting, allowCopying, allowModifying]);
 
   // ─── Reset ───
   const handleClear = useCallback(() => {
@@ -93,7 +100,7 @@ export function ProtectPdfWorkspace() {
             onClick={handleClear}
             className="ms-auto text-xs font-medium text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
           >
-            {dict.workspace.reset || "Reset"}
+            {dict.workspace.reset}
           </button>
         )}
       </div>
@@ -119,7 +126,7 @@ export function ProtectPdfWorkspace() {
             {dict.workspace.done}
           </h3>
           <p className="mb-4 text-sm text-green-700 dark:text-green-500">
-            {dict.workspace.protectPdf ? "PDF protected with password." : "PDF protected with password."}
+            {dict.workspace.protectPdf}
           </p>
           <button
             onClick={handleClear}
@@ -140,11 +147,11 @@ export function ProtectPdfWorkspace() {
         </div>
       )}
 
-      {/* File info + password form */}
+      {/* File info + password form + options */}
       {file && !processing && !result && (
-        <div className="mt-4 space-y-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-          {/* File info */}
-          <div className="flex items-center justify-between">
+        <div className="mt-4 space-y-4">
+          {/* File info card */}
+          <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{file.name}</p>
               <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(0)} {dict.workspace.kb}</p>
@@ -152,56 +159,124 @@ export function ProtectPdfWorkspace() {
           </div>
 
           {/* Password input */}
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
-              {dict.workspace.enterPassword || "Enter password"}
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={dict.workspace.enterPassword || "Enter password"}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 pe-10 text-sm text-gray-700 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder:text-gray-500"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                {showPassword
-                  ? (dict.workspace.hidePassword || "Hide")
-                  : (dict.workspace.showPassword || "Show")}
-              </button>
+          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  {dict.workspace.enterPassword}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={dict.workspace.enterPassword}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 pe-10 text-sm text-gray-700 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder:text-gray-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    {showPassword ? dict.workspace.hidePassword : dict.workspace.showPassword}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm password input */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  {dict.workspace.confirmPassword}
+                </label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder={dict.workspace.confirmPassword}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder:text-gray-500"
+                />
+                {password && confirmPassword && password !== confirmPassword && (
+                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                    {dict.workspace.passwordMismatch}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Confirm password input */}
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
-              {dict.workspace.confirmPassword || "Confirm password"}
-            </label>
-            <input
-              type={showPassword ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder={dict.workspace.confirmPassword || "Confirm password"}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder:text-gray-500"
-            />
-            {password && confirmPassword && password !== confirmPassword && (
-              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                {dict.workspace.passwordMismatch || "Passwords do not match"}
-              </p>
+          {/* Encryption algorithm */}
+          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+            <p className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+              {dict.workspace.encryptionAlgorithm}
+            </p>
+            <div className="flex gap-2">
+              {(["AES-256", "RC4"] as AlgorithmOption[]).map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => setAlgorithm(opt)}
+                  className={`flex-1 rounded-xl px-4 py-3 text-center text-sm font-semibold transition-all ${
+                    algorithm === opt
+                      ? "bg-purple-600 text-white shadow-lg shadow-purple-500/25"
+                      : "border-2 border-gray-200 bg-gray-50 text-gray-600 hover:border-purple-300 hover:bg-purple-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:border-purple-600 dark:hover:bg-purple-950/30"
+                  }`}
+                >
+                  {opt === "AES-256"
+                    ? dict.workspace.encryptAes256
+                    : dict.workspace.encryptRc4}
+                </button>
+              ))}
+            </div>
+            {algorithm === "AES-256" && (
+              <p className="mt-2 text-[11px] text-gray-400">{dict.workspace.encryptAes256Desc}</p>
             )}
+            {algorithm === "RC4" && (
+              <p className="mt-2 text-[11px] text-gray-400">{dict.workspace.encryptRc4Desc}</p>
+            )}
+          </div>
+
+          {/* Permissions */}
+          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+            <p className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+              {dict.workspace.permissions}
+            </p>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <input
+                  type="checkbox"
+                  checked={allowPrinting}
+                  onChange={(e) => setAllowPrinting(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 dark:border-gray-600"
+                />
+                {dict.workspace.allowPrinting}
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <input
+                  type="checkbox"
+                  checked={allowCopying}
+                  onChange={(e) => setAllowCopying(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 dark:border-gray-600"
+                />
+                {dict.workspace.allowCopying}
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <input
+                  type="checkbox"
+                  checked={allowModifying}
+                  onChange={(e) => setAllowModifying(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 dark:border-gray-600"
+                />
+                {dict.workspace.allowModifying}
+              </label>
+            </div>
           </div>
 
           {/* Protect button */}
           <button
             onClick={handleProcess}
-            disabled={processing || !password || !confirmPassword}
+            disabled={processing || !password || !confirmPassword || password !== confirmPassword}
             className="gradient-brand w-full rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {dict.workspace.protectPdf || "Protect PDF"}
+            {dict.workspace.protectPdf}
           </button>
         </div>
       )}

@@ -1,5 +1,5 @@
 // ─── Unlock PDF Workspace ───
-// Inline password input instead of prompt() — decrypt PDF with user-supplied password
+// Client-side PDF decryption using @pdfsmaller/pdf-decrypt (AES-256 / RC4, Web Crypto API)
 "use client";
 
 import { useState, useCallback } from "react";
@@ -29,7 +29,7 @@ export function UnlockPdfWorkspace() {
     setPassword("");
   }, []);
 
-  // ─── Process (unlock) ───
+  // ─── Process (unlock/decrypt) ───
   const handleProcess = useCallback(async () => {
     if (!file) return;
 
@@ -42,33 +42,30 @@ export function UnlockPdfWorkspace() {
     setError(null);
 
     try {
-      const { PDFDocument } = await import("pdf-lib");
+      const { decryptPDF } = await import("@pdfsmaller/pdf-decrypt");
       const buffer = await file.arrayBuffer();
+      const pdfBytes = new Uint8Array(buffer);
 
-      let doc;
-      try {
-        doc = await (PDFDocument as any).load(buffer, { password });
-      } catch {
-        throw new Error(dict.workspace.incorrectPassword || "Incorrect password");
-      }
+      const decrypted = await decryptPDF(pdfBytes, password);
 
-      // pdf-lib doesn't have a "remove encryption" API directly.
-      // Workaround: copy pages to a new unencrypted document.
-      const newDoc = await PDFDocument.create();
-      const indices = doc.getPageIndices();
-      const pages = await newDoc.copyPages(doc, indices);
-      pages.forEach((p: any) => newDoc.addPage(p));
-      const resultBytes = await newDoc.save();
-
-      setResult(resultBytes);
+      setResult(decrypted);
       const baseName = file.name.replace(/\.pdf$/i, "");
-      downloadBlob(resultBytes, `${baseName}_unlocked.pdf`);
+      downloadBlob(decrypted, `${baseName}_unlocked.pdf`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : dict.workspace.processingFailed || "Processing failed");
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("not encrypted")) {
+        setError(dict.workspace.pdfNotEncrypted || "This PDF is not encrypted");
+      } else if (msg.includes("Incorrect password")) {
+        setError(dict.workspace.incorrectPassword || "Incorrect password");
+      } else if (msg.includes("Unsupported encryption")) {
+        setError(dict.workspace.unsupportedEncryption || "Unsupported encryption type");
+      } else {
+        setError(msg || dict.workspace.processingFailed || "Processing failed");
+      }
     }
 
     setProcessing(false);
-  }, [file, password]);
+  }, [file, password, dict]);
 
   // ─── Reset ───
   const handleClear = useCallback(() => {

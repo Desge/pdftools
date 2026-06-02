@@ -125,6 +125,7 @@ export const TOOLS: ToolMeta[] = [
     keywords: ["pdf to ppt", "pdf to powerpoint", "convert pdf to ppt", "pdf to slides"],
     category: "convert",
     icon: "📊",
+    requiresServer: true,
   },
   {
     slug: "pdf-to-excel",
@@ -134,6 +135,7 @@ export const TOOLS: ToolMeta[] = [
     keywords: ["pdf to excel", "pdf to xlsx", "convert pdf to excel", "extract pdf to excel"],
     category: "convert",
     icon: "📈",
+    requiresServer: true,
   },
 
   // ── Edit PDF ──
@@ -269,4 +271,7 @@ export const getCategories = (): ToolMeta["category"][] => {
   return Array.from(cats);
 };
 
-export const TOOLS_COUNT = TOOLS.length;
+/** Tools visible to users (excludes server-required tools not yet implemented) */
+export const VISIBLE_TOOLS = TOOLS.filter((t) => !t.requiresServer);
+
+export const VISIBLE_TOOLS_COUNT = VISIBLE_TOOLS.length;

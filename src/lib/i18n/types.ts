@@ -164,6 +164,8 @@ export interface LangDict {
     protectPdf: string;
     unlockPdf: string;
     incorrectPassword: string;
+    pdfNotEncrypted: string;
+    unsupportedEncryption: string;
     // Compress PDF workspace
     compressLevels: {
       label: string;
@@ -190,6 +192,76 @@ export interface LangDict {
     removeFile: string;
     needAtLeastTwo: string;
     files: string;
+    // Shared option labels (used by jpg-to-pdf, heic-to-pdf, word/excel/html/markdown-to-pdf)
+    pageSize: string;
+    a4: string;
+    letter: string;
+    original: string;
+    orientation: string;
+    auto: string;
+    portrait: string;
+    landscape: string;
+    margins: string;
+    marginNone: string;
+    marginNarrow: string;
+    marginMedium: string;
+    marginWide: string;
+    marginSmall: string;
+    marginLarge: string;
+    remove: string;
+    paperSize: string;
+    // Page Numbers workspace
+    position: string;
+    startNumber: string;
+    formatDigits: string;
+    formatPageX: string;
+    formatXOfN: string;
+    formatDashX: string;
+    addPageNumbersError: string;
+    // Word to PDF workspace
+    parsingWord: string;
+    // Excel to PDF workspace
+    parsingSpreadsheet: string;
+    // HTML to PDF workspace
+    loadingHtml: string;
+    renderScale: string;
+    // Markdown to PDF workspace
+    processingMarkdown: string;
+    codeHighlight: string;
+    on: string;
+    off: string;
+    // HEIC to PDF workspace
+    decodingHeic: string;
+    // OCR PDF workspace
+    ocrInitializing: string;
+    ocrLoadingEngine: string;
+    ocrLanguage: string;
+    ocrLangEn: string;
+    ocrLangZh: string;
+    ocrLangJa: string;
+    ocrOutputFormat: string;
+    ocrFormatText: string;
+    ocrFormatPdf: string;
+    ocrProgress: (page: number, total: number) => string;
+    ocrError: string;
+    // PDF to Word workspace
+    buildingWord: string;
+    generatingDocx: string;
+    pageSeparator: string;
+    separatorPageBreak: string;
+    separatorContinuous: string;
+    includePageNumbers: string;
+    pdfToWordError: string;
+    // Protect PDF workspace
+    encryptionAlgorithm: string;
+    encryptAes256: string;
+    encryptRc4: string;
+    encryptAes256Desc: string;
+    encryptRc4Desc: string;
+    permissions: string;
+    allowPrinting: string;
+    allowCopying: string;
+    allowModifying: string;
   };
   home: {
     breadcrumbHome: string;
@@ -222,6 +294,7 @@ export interface LangDict {
     faqQualityAns2: string;
     quality: string;
     relatedConversions: string;
+    subtitleGeneric: string;
   };
   category: {
     all: string;

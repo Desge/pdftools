@@ -1,6 +1,6 @@
 // ─── Locale-aware Homepage (server component) ───
 // Only the interactive category tabs + tool grid are client-side.
-import { TOOLS, getToolsByCategory } from "@/lib/tools";
+import { VISIBLE_TOOLS, getToolsByCategory } from "@/lib/tools";
 import { t, DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@/lib/i18n";
 import { siteJsonLd } from "@/lib/seo";
 import type { LangDict } from "@/lib/i18n";
@@ -23,7 +23,7 @@ export default async function HomePage({
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd()) }} />
-      <HeroSection dict={dict} locale={locale} toolCount={TOOLS.length} />
+      <HeroSection dict={dict} locale={locale} toolCount={VISIBLE_TOOLS.length} />
       {/* 广告位 - 首页横幅 */}
       <AdBanner slot="6666666666" format="horizontal" className="my-6" />
       <InteractiveTools locale={locale} />

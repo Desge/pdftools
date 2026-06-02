@@ -299,6 +299,8 @@ const dict: LangDict = {
     hidePassword: "Скрыть",
     protectPdf: "Защитить PDF",
     unlockPdf: "Разблокировать",
+    pdfNotEncrypted: "Этот PDF не зашифрован",
+    unsupportedEncryption: "Неподдерживаемый тип шифрования",
     incorrectPassword: "Неверный пароль",
     // Compress PDF workspace
     compressLevels: {
@@ -326,6 +328,76 @@ const dict: LangDict = {
     removeFile: "Удалить файл",
     needAtLeastTwo: "Добавьте как минимум 2 PDF-файла для объединения",
     files: "файлов",
+    // Shared option labels
+    pageSize: "Размер страницы",
+    a4: "A4",
+    letter: "Letter",
+    original: "Оригинал",
+    orientation: "Ориентация",
+    auto: "Авто",
+    portrait: "Книжная",
+    landscape: "Альбомная",
+    margins: "Поля",
+    marginNone: "Нет",
+    marginNarrow: "Узкие",
+    marginMedium: "Средние",
+    marginWide: "Широкие",
+    marginSmall: "Маленькие",
+    marginLarge: "Большие",
+    remove: "Удалить",
+    paperSize: "Формат бумаги",
+    // Page Numbers workspace
+    position: "Положение",
+    startNumber: "Начальный номер",
+    formatDigits: "1, 2, 3",
+    formatPageX: "Страница 1, Страница 2",
+    formatXOfN: "1/N",
+    formatDashX: "—1—",
+    addPageNumbersError: "Произошла ошибка при добавлении номеров страниц.",
+    // Word to PDF workspace
+    parsingWord: "Разбор документа Word...",
+    // Excel to PDF workspace
+    parsingSpreadsheet: "Разбор электронной таблицы...",
+    // HTML to PDF workspace
+    loadingHtml: "Загрузка HTML...",
+    renderScale: "Масштаб рендеринга",
+    // Markdown to PDF workspace
+    processingMarkdown: "Обработка Markdown...",
+    codeHighlight: "Подсветка кода",
+    on: "Вкл",
+    off: "Выкл",
+    // HEIC to PDF workspace
+    decodingHeic: "Декодирование HEIC-файлов...",
+    // OCR PDF workspace
+    ocrInitializing: "Инициализация...",
+    ocrLoadingEngine: "Загрузка OCR-движка...",
+    ocrLanguage: "Язык",
+    ocrLangEn: "Английский",
+    ocrLangZh: "Китайский + Английский",
+    ocrLangJa: "Японский + Английский",
+    ocrOutputFormat: "Формат вывода",
+    ocrFormatText: "Обычный текст",
+    ocrFormatPdf: "PDF с текстовым слоем",
+    ocrProgress: (page, total) => `Страница ${page}/${total}`,
+    ocrError: "Произошла ошибка во время обработки OCR.",
+    // PDF to Word workspace
+    buildingWord: "Создание документа Word...",
+    generatingDocx: "Генерация DOCX-файла...",
+    pageSeparator: "Разделитель страниц",
+    separatorPageBreak: "Разрыв страницы",
+    separatorContinuous: "Непрерывный",
+    includePageNumbers: "Включать номера страниц",
+    pdfToWordError: "Произошла ошибка при конвертации в Word.",
+    // Protect PDF workspace
+    encryptionAlgorithm: "Шифрование",
+    encryptAes256: "AES-256",
+    encryptRc4: "RC4 128 бит",
+    encryptAes256Desc: "PDF 2.0 — Максимальная безопасность",
+    encryptRc4Desc: "Совместимо со старыми PDF-читалками",
+    permissions: "Разрешения",
+    allowPrinting: "Разрешить печать",
+    allowCopying: "Разрешить копирование текста",
+    allowModifying: "Разрешить изменение",
   },
   home: {
     breadcrumbHome: "Home",
@@ -357,6 +429,7 @@ const dict: LangDict = {
     faqQualityAns3: "Качество обычно хорошее, хотя сложное форматирование может быть упрощено.",
     faqQualityAns2: "Этот тип преобразования имеет ограничения. Рекомендуем проверить результат.",
     quality: "Качество",
+    subtitleGeneric: "Конвертируйте PDF в различные форматы и обратно. Бесплатно, без загрузки, в браузере.",
     relatedConversions: "Связанные преобразования"
 },
   category: {

@@ -299,6 +299,8 @@ const dict: LangDict = {
     hidePassword: "隐藏",
     protectPdf: "加密保护",
     unlockPdf: "解锁",
+    pdfNotEncrypted: "此 PDF 未加密",
+    unsupportedEncryption: "不支持的加密类型",
     incorrectPassword: "密码错误",
     // Compress PDF workspace
     compressLevels: {
@@ -326,6 +328,76 @@ const dict: LangDict = {
     removeFile: "移除文件",
     needAtLeastTwo: "请添加至少 2 个 PDF 文件进行合并",
     files: "个文件",
+    // Shared option labels
+    pageSize: "页面大小",
+    a4: "A4",
+    letter: "Letter",
+    original: "原始大小",
+    orientation: "方向",
+    auto: "自动",
+    portrait: "纵向",
+    landscape: "横向",
+    margins: "页边距",
+    marginNone: "无",
+    marginNarrow: "窄",
+    marginMedium: "中",
+    marginWide: "宽",
+    marginSmall: "小",
+    marginLarge: "大",
+    remove: "移除",
+    paperSize: "纸张大小",
+    // Page Numbers workspace
+    position: "位置",
+    startNumber: "起始编号",
+    formatDigits: "1, 2, 3",
+    formatPageX: "第1页, 第2页",
+    formatXOfN: "1/N",
+    formatDashX: "—1—",
+    addPageNumbersError: "添加页码时发生错误。",
+    // Word to PDF workspace
+    parsingWord: "正在解析 Word 文档...",
+    // Excel to PDF workspace
+    parsingSpreadsheet: "正在解析电子表格...",
+    // HTML to PDF workspace
+    loadingHtml: "正在加载 HTML...",
+    renderScale: "渲染缩放",
+    // Markdown to PDF workspace
+    processingMarkdown: "正在处理 Markdown...",
+    codeHighlight: "代码高亮",
+    on: "开",
+    off: "关",
+    // HEIC to PDF workspace
+    decodingHeic: "正在解码 HEIC 文件...",
+    // OCR PDF workspace
+    ocrInitializing: "正在初始化...",
+    ocrLoadingEngine: "正在加载 OCR 引擎...",
+    ocrLanguage: "语言",
+    ocrLangEn: "英语",
+    ocrLangZh: "中文 + 英语",
+    ocrLangJa: "日语 + 英语",
+    ocrOutputFormat: "输出格式",
+    ocrFormatText: "纯文本",
+    ocrFormatPdf: "带文字层的 PDF",
+    ocrProgress: (page, total) => `第 ${page}/${total} 页`,
+    ocrError: "OCR 处理过程中发生错误。",
+    // PDF to Word workspace
+    buildingWord: "正在构建 Word 文档...",
+    generatingDocx: "正在生成 DOCX 文件...",
+    pageSeparator: "页分隔符",
+    separatorPageBreak: "分页符",
+    separatorContinuous: "连续",
+    includePageNumbers: "包含页码",
+    pdfToWordError: "转换为 Word 时发生错误。",
+    // Protect PDF workspace
+    encryptionAlgorithm: "加密算法",
+    encryptAes256: "AES-256",
+    encryptRc4: "RC4 128位",
+    encryptAes256Desc: "PDF 2.0 — 最高安全级别",
+    encryptRc4Desc: "兼容旧版 PDF 阅读器",
+    permissions: "权限设置",
+    allowPrinting: "允许打印",
+    allowCopying: "允许复制文本",
+    allowModifying: "允许修改",
   },
   home: {
     breadcrumbHome: "Home",
@@ -357,6 +429,7 @@ const dict: LangDict = {
     faqQualityAns3: "质量通常不错，但复杂格式可能会被简化。",
     faqQualityAns2: "此转换类型存在限制，我们建议您验证输出质量。",
     quality: "质量",
+    subtitleGeneric: "在各种格式与 PDF 之间互相转换。免费、无需上传，浏览器内完成。",
     relatedConversions: "相关转换"
 },
   category: {

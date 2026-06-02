@@ -299,6 +299,8 @@ const dict: LangDict = {
     hidePassword: "非表示",
     protectPdf: "PDFを保護",
     unlockPdf: "ロック解除",
+    pdfNotEncrypted: "このPDFは暗号化されていません",
+    unsupportedEncryption: "サポートされていない暗号化タイプ",
     incorrectPassword: "パスワードが正しくありません",
     // Compress PDF workspace
     compressLevels: {
@@ -326,6 +328,76 @@ const dict: LangDict = {
     removeFile: "ファイルを削除",
     needAtLeastTwo: "結合するには少なくとも2つのPDFファイルを追加してください",
     files: "ファイル",
+    // Shared option labels
+    pageSize: "ページサイズ",
+    a4: "A4",
+    letter: "Letter",
+    original: "オリジナル",
+    orientation: "向き",
+    auto: "自動",
+    portrait: "縦向き",
+    landscape: "横向き",
+    margins: "余白",
+    marginNone: "なし",
+    marginNarrow: "狭い",
+    marginMedium: "中",
+    marginWide: "広い",
+    marginSmall: "小",
+    marginLarge: "大",
+    remove: "削除",
+    paperSize: "用紙サイズ",
+    // Page Numbers workspace
+    position: "位置",
+    startNumber: "開始番号",
+    formatDigits: "1, 2, 3",
+    formatPageX: "ページ 1, ページ 2",
+    formatXOfN: "1/N",
+    formatDashX: "—1—",
+    addPageNumbersError: "ページ番号の追加中にエラーが発生しました。",
+    // Word to PDF workspace
+    parsingWord: "Word 文書を解析中...",
+    // Excel to PDF workspace
+    parsingSpreadsheet: "スプレッドシートを解析中...",
+    // HTML to PDF workspace
+    loadingHtml: "HTML を読み込み中...",
+    renderScale: "レンダリングスケール",
+    // Markdown to PDF workspace
+    processingMarkdown: "Markdown を処理中...",
+    codeHighlight: "コードハイライト",
+    on: "オン",
+    off: "オフ",
+    // HEIC to PDF workspace
+    decodingHeic: "HEIC ファイルをデコード中...",
+    // OCR PDF workspace
+    ocrInitializing: "初期化中...",
+    ocrLoadingEngine: "OCR エンジンを読み込み中...",
+    ocrLanguage: "言語",
+    ocrLangEn: "英語",
+    ocrLangZh: "中国語 + 英語",
+    ocrLangJa: "日本語 + 英語",
+    ocrOutputFormat: "出力形式",
+    ocrFormatText: "プレーンテキスト",
+    ocrFormatPdf: "テキストレイヤー付き PDF",
+    ocrProgress: (page, total) => `ページ ${page}/${total}`,
+    ocrError: "OCR 処理中にエラーが発生しました。",
+    // PDF to Word workspace
+    buildingWord: "Word 文書を構築中...",
+    generatingDocx: "DOCX ファイルを生成中...",
+    pageSeparator: "ページ区切り",
+    separatorPageBreak: "改ページ",
+    separatorContinuous: "連続",
+    includePageNumbers: "ページ番号を含める",
+    pdfToWordError: "Word への変換中にエラーが発生しました。",
+    // Protect PDF workspace
+    encryptionAlgorithm: "暗号化",
+    encryptAes256: "AES-256",
+    encryptRc4: "RC4 128ビット",
+    encryptAes256Desc: "PDF 2.0 — 最高のセキュリティ",
+    encryptRc4Desc: "古いPDFリーダーと互換性あり",
+    permissions: "アクセス許可",
+    allowPrinting: "印刷を許可",
+    allowCopying: "テキストのコピーを許可",
+    allowModifying: "変更を許可",
   },
   home: {
     breadcrumbHome: "Home",
@@ -357,6 +429,7 @@ const dict: LangDict = {
     faqQualityAns3: "品質は概ね良好ですが、複雑なフォーマットは簡略化される場合があります。",
     faqQualityAns2: "この変換タイプには制限があります。出力を確認することをお勧めします。",
     quality: "品質",
+    subtitleGeneric: "PDFとさまざまな形式を相互変換。無料、アップロード不要、ブラウザで完結。",
     relatedConversions: "関連変換"
 },
   category: {
