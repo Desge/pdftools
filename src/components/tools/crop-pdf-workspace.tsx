@@ -3,8 +3,11 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { downloadBlob } from "@/lib/pdf-render";
+import { getPdfjs } from "@/lib/pdfjs-singleton";
+import { t } from "@/lib/i18n";
 
 // ─── Types ───
 interface CropBox {
@@ -21,19 +24,10 @@ interface PageState {
   originalHeight: number;
 }
 
-// ─── Inline pdfjs import ───
-let pdfjsLib: typeof import("pdfjs-dist") | null = null;
-async function getPdfjs() {
-  if (!pdfjsLib) {
-    pdfjsLib = await import("pdfjs-dist");
-    (pdfjsLib as any).GlobalWorkerOptions.workerSrc =
-      `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${(pdfjsLib as any).version}/pdf.worker.min.mjs`;
-  }
-  return pdfjsLib;
-}
-
-// ─── Component ───
 export function CropPdfWorkspace() {
+  const params = useParams();
+  const locale = (params?.locale as string) || "en";
+  const dict = t(locale);
   const [file, setFile] = useState<File | null>(null);
   const [pages, setPages] = useState<PageState[]>([]);
   const [activePage, setActivePage] = useState(0);
@@ -51,8 +45,26 @@ export function CropPdfWorkspace() {
     startBox: CropBox;
   } | null>(null);
 
+  // Apply to all pages toggle
+  const [applyToAllPages, setApplyToAllPages] = useState(true);
+
+  // Numeric input sync lock to prevent loops
+  const [inputValues, setInputValues] = useState({ x: 0, y: 0, w: 0, h: 0 });
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Update input values when cropBox changes
+  useEffect(() => {
+    if (cropBox) {
+      setInputValues({
+        x: Math.round(cropBox.x),
+        y: Math.round(cropBox.y),
+        w: Math.round(cropBox.width),
+        h: Math.round(cropBox.height),
+      });
+    }
+  }, [cropBox]);
 
   // Load PDF and render pages
   const handleFile = useCallback(async (files: File[]) => {
@@ -95,15 +107,16 @@ export function CropPdfWorkspace() {
       // Set initial crop box (full page = no crop)
       if (renderedPages.length > 0) {
         const first = renderedPages[0];
-        setCropBox({
+        const box = {
           x: 20,
           y: 20,
           width: first.originalWidth - 40,
           height: first.originalHeight - 40,
-        });
+        };
+        setCropBox(box);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load PDF");
+      setError(err instanceof Error ? err.message : dict.workspace.failedToLoad);
     }
     setLoading(false);
   }, []);
@@ -172,6 +185,14 @@ export function CropPdfWorkspace() {
     corners.forEach((c) => {
       ctx.fillRect(c.x - handleSize / 2, c.y - handleSize / 2, handleSize, handleSize);
     });
+
+    // Show dimension labels at bottom-right of crop area
+    ctx.fillStyle = "rgba(124, 58, 237, 0.85)";
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "bottom";
+    const label = `${Math.round(box.width)} × ${Math.round(box.height)} px`;
+    ctx.fillText(label, box.x + box.width - 4, box.y + box.height - 4);
   }
 
   // ─── Mouse handlers on canvas ───
@@ -270,6 +291,33 @@ export function CropPdfWorkspace() {
     setDragging(null);
   };
 
+  // ─── Numeric input handlers ───
+  const handleNumericChange = (field: "x" | "y" | "w" | "h", value: string) => {
+    if (!cropBox || !pages[activePage]) return;
+    const num = Math.max(0, parseInt(value) || 0);
+    const pageW = pages[activePage].originalWidth;
+    const pageH = pages[activePage].originalHeight;
+
+    setInputValues((prev) => ({ ...prev, [field]: num }));
+
+    const newBox = { ...cropBox };
+    switch (field) {
+      case "x":
+        newBox.x = Math.min(num, pageW - newBox.width);
+        break;
+      case "y":
+        newBox.y = Math.min(num, pageH - newBox.height);
+        break;
+      case "w":
+        newBox.width = Math.max(40, Math.min(num, pageW - newBox.x));
+        break;
+      case "h":
+        newBox.height = Math.max(40, Math.min(num, pageH - newBox.y));
+        break;
+    }
+    setCropBox(newBox);
+  };
+
   // Preset crop sizes
   const applyPreset = (preset: string) => {
     if (!pages[activePage]) return;
@@ -279,6 +327,8 @@ export function CropPdfWorkspace() {
     const presets: Record<string, CropBox> = {
       "A4": { x: Math.round(w * 0.05), y: Math.round(h * 0.05), width: Math.round(w * 0.90), height: Math.round(w * 1.26) },
       "Letter": { x: Math.round(w * 0.05), y: Math.round(h * 0.05), width: Math.round(w * 0.90), height: Math.round(w * 1.17) },
+      "16:9": { x: Math.round(w * 0.05), y: Math.round(h * 0.05), width: Math.round(w * 0.90), height: Math.round(w * 0.90 * 9 / 16) },
+      "4:3": { x: Math.round(w * 0.05), y: Math.round(h * 0.05), width: Math.round(w * 0.90), height: Math.round(w * 0.90 * 3 / 4) },
       "Square": { x: Math.round(w * 0.05), y: Math.round(h * 0.15), width: Math.round(w * 0.70), height: Math.round(w * 0.70) },
       "Full Page": { x: 0, y: 0, width: w, height: h },
       "Auto Margin": { x: Math.round(w * 0.05), y: Math.round(h * 0.05), width: Math.round(w * 0.90), height: Math.round(h * 0.90) },
@@ -306,8 +356,10 @@ export function CropPdfWorkspace() {
       const ratioW = cropBox.width / originalWidth;
       const ratioH = cropBox.height / originalHeight;
 
-      for (let i = 0; i < pageCount; i++) {
-        const page = doc.getPage(i);
+      const pagesToCrop = applyToAllPages ? Array.from({ length: pageCount }, (_, i) => i) : [activePage];
+
+      for (const pageIdx of pagesToCrop) {
+        const page = doc.getPage(pageIdx);
         const { width, height } = page.getSize();
         const cropX = width * ratioX;
         const cropY = height * ratioY;
@@ -321,10 +373,10 @@ export function CropPdfWorkspace() {
       setResult(result);
       downloadBlob(result, file.name.replace(/\.pdf$/i, "") + "_cropped.pdf");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Processing failed");
+      setError(err instanceof Error ? err.message : dict.workspace.processingFailed);
     }
     setProcessing(false);
-  }, [file, cropBox, pages, activePage]);
+  }, [file, cropBox, pages, activePage, applyToAllPages]);
 
   const handleClear = () => {
     setFile(null);
@@ -342,22 +394,29 @@ export function CropPdfWorkspace() {
       <div className="mb-4 flex items-center justify-between">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/40 dark:text-green-400">
           <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-          No upload — all cropping happens locally
+          {dict.workspace.noUploadCrop}
         </span>
         {file && (
-          <button onClick={handleClear} className="text-xs font-medium text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">Reset</button>
+          <button onClick={handleClear} className="text-xs font-medium text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">{dict.workspace.reset}</button>
         )}
       </div>
 
       {/* Dropzone */}
       {!file && <FileDropzone onFiles={handleFile} accept=".pdf" multiple={false} />}
 
+      {/* Large file warning */}
+      {file && file.size > 50 * 1024 * 1024 && (
+        <p className="mb-3 text-xs text-amber-600 dark:text-amber-400">
+          ⚠ {dict.workspace.largeFileWarning}
+        </p>
+      )}
+
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center rounded-xl bg-gray-50 py-20 dark:bg-gray-900">
           <div className="flex items-center gap-3">
             <div className="h-6 w-6 animate-spin rounded-full border-3 border-purple-200 border-t-purple-600" />
-            <span className="text-sm text-gray-500">Loading PDF pages...</span>
+            <span className="text-sm text-gray-500">{dict.workspace.loadingPages}</span>
           </div>
         </div>
       )}
@@ -379,29 +438,83 @@ export function CropPdfWorkspace() {
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                   }`}
                 >
-                  Page {i + 1}
+                  {dict.workspace.page} {i + 1}
                 </button>
               ))}
             </div>
 
-            <div className="ml-auto flex flex-wrap gap-1">
-              {["A4", "Letter", "Square", "Full Page", "Auto Margin"].map((p) => (
+            <div className="ms-auto flex flex-wrap gap-1">
+              {["A4", "Letter", "16:9", "4:3", "Square", "Full Page", "Auto Margin"].map((p) => (
                 <button
                   key={p}
                   onClick={() => applyPreset(p)}
                   className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs text-gray-600 hover:border-purple-300 hover:text-purple-600 dark:border-gray-700 dark:text-gray-400 dark:hover:border-purple-600"
                 >
-                  {p}
+                  {p === "Full Page" ? dict.workspace.fullPage
+                    : p === "Auto Margin" ? dict.workspace.autoMargin
+                    : p === "A4" ? dict.workspace.presetA4
+                    : p === "Letter" ? dict.workspace.presetLetter
+                    : p === "Square" ? dict.workspace.presetSquare
+                    : p === "16:9" ? dict.workspace.preset16x9
+                    : p === "4:3" ? dict.workspace.preset4x3
+                    : p}
                 </button>
               ))}
             </div>
           </div>
 
+          {/* Numeric crop dimension inputs */}
+          {cropBox && (
+            <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-3 dark:border-purple-800 dark:bg-purple-950/20">
+              <div className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div>
+                  <label className="mb-0.5 block text-[10px] font-medium text-purple-700 dark:text-purple-400">{dict.workspace.cropX}</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={inputValues.x}
+                    onChange={(e) => handleNumericChange("x", e.target.value)}
+                    className="w-full rounded-md border border-purple-300 px-2 py-1 text-xs text-gray-700 focus:border-purple-500 focus:outline-none dark:border-purple-700 dark:bg-gray-800 dark:text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="mb-0.5 block text-[10px] font-medium text-purple-700 dark:text-purple-400">{dict.workspace.cropY}</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={inputValues.y}
+                    onChange={(e) => handleNumericChange("y", e.target.value)}
+                    className="w-full rounded-md border border-purple-300 px-2 py-1 text-xs text-gray-700 focus:border-purple-500 focus:outline-none dark:border-purple-700 dark:bg-gray-800 dark:text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="mb-0.5 block text-[10px] font-medium text-purple-700 dark:text-purple-400">{dict.workspace.cropWidth}</label>
+                  <input
+                    type="number"
+                    min={40}
+                    value={inputValues.w}
+                    onChange={(e) => handleNumericChange("w", e.target.value)}
+                    className="w-full rounded-md border border-purple-300 px-2 py-1 text-xs text-gray-700 focus:border-purple-500 focus:outline-none dark:border-purple-700 dark:bg-gray-800 dark:text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="mb-0.5 block text-[10px] font-medium text-purple-700 dark:text-purple-400">{dict.workspace.cropHeight}</label>
+                  <input
+                    type="number"
+                    min={40}
+                    value={inputValues.h}
+                    onChange={(e) => handleNumericChange("h", e.target.value)}
+                    className="w-full rounded-md border border-purple-300 px-2 py-1 text-xs text-gray-700 focus:border-purple-500 focus:outline-none dark:border-purple-700 dark:bg-gray-800 dark:text-gray-200"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Preview info */}
           {cropBox && (
             <div className="rounded-lg bg-purple-50 px-3 py-2 text-xs text-purple-700 dark:bg-purple-950/30 dark:text-purple-400">
-              Crop region: {Math.round(cropBox.x)}×{Math.round(cropBox.y)} + {Math.round(cropBox.width)}×{Math.round(cropBox.height)} px
-              — drag corners to resize, drag center to move
+              {dict.workspace.cropRegion}: {Math.round(cropBox.x)}×{Math.round(cropBox.y)} + {Math.round(cropBox.width)}×{Math.round(cropBox.height)} px {dict.workspace.dragToResize}
             </div>
           )}
 
@@ -423,10 +536,22 @@ export function CropPdfWorkspace() {
           </div>
 
           {/* Apply to all pages toggle */}
-          <div className="flex items-center gap-2 rounded-lg border border-purple-200 bg-purple-50/50 px-4 py-2.5 text-sm dark:border-purple-800 dark:bg-purple-950/20">
-            <span className="text-purple-700 dark:text-purple-400">
-              📐 Crop will be applied to <strong>all {pages.length} pages</strong>.
-              {pages.length > 1 && " Switch page tabs to preview each."}
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-purple-200 bg-purple-50/50 px-4 py-2.5 text-sm dark:border-purple-800 dark:bg-purple-950/20">
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={applyToAllPages}
+                onChange={(e) => setApplyToAllPages(e.target.checked)}
+                className="h-4 w-4 rounded border-purple-300 text-purple-600 focus:ring-purple-500"
+              />
+              <span className="text-xs font-medium text-purple-700 dark:text-purple-400">
+                {dict.workspace.applyToAllPages}
+              </span>
+            </label>
+            <span className="text-xs text-purple-600 dark:text-purple-400">
+              {applyToAllPages
+                ? dict.workspace.cropAllPages(pages.length)
+                : dict.workspace.cropSinglePage}
             </span>
           </div>
 
@@ -436,13 +561,17 @@ export function CropPdfWorkspace() {
             disabled={processing}
             className="gradient-brand w-full rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {processing ? "Processing..." : `Apply Crop to All ${pages.length} Pages`}
+            {processing
+              ? dict.workspace.processing
+              : applyToAllPages
+                ? dict.workspace.cropAllPages(pages.length)
+                : dict.workspace.cropSinglePage}
           </button>
 
           {processing && (
             <div className="flex items-center justify-center gap-3 text-sm text-purple-600">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-purple-200 border-t-purple-600" />
-              Cropping pages...
+              {dict.workspace.croppingPages}
             </div>
           )}
         </div>
@@ -452,7 +581,7 @@ export function CropPdfWorkspace() {
       {error && (
         <div className="mt-4 rounded-xl border-2 border-red-200 bg-red-50/50 p-4 text-center dark:border-red-800 dark:bg-red-950/20">
           <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
-          <button onClick={handleClear} className="mt-2 text-xs font-medium text-red-600 hover:underline">Try Again</button>
+          <button onClick={handleClear} className="mt-2 text-xs font-medium text-red-600 hover:underline">{dict.workspace.tryAgain}</button>
         </div>
       )}
     </div>

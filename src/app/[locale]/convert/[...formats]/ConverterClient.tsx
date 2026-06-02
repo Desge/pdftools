@@ -3,6 +3,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { runToolProcessor, downloadResult, hasProcessor } from "@/lib/tool-processors";
 import { t } from "@/lib/i18n";
@@ -58,6 +59,10 @@ export function ConverterClient({ pair, locale: localeProp }: ConverterClientPro
   // Use the provided locale or fallback
   const dict = t(localeProp ?? "en");
 
+  // Read URL search params for sharing
+  const searchParams = useSearchParams();
+  const urlParam = searchParams?.get("url") ?? "";
+
   const [files, setFiles] = useState<File[]>([]);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
@@ -67,6 +72,8 @@ export function ConverterClient({ pair, locale: localeProp }: ConverterClientPro
     ready: boolean;
   } | null>(null);
   const [resultData, setResultData] = useState<Awaited<ReturnType<typeof runToolProcessor>> | null>(null);
+  const [remoteUrl, setRemoteUrl] = useState(urlParam);
+  const [fetchingRemote, setFetchingRemote] = useState(false);
 
   const handleFiles = useCallback((newFiles: File[]) => {
     setFiles(newFiles);
@@ -115,6 +122,27 @@ export function ConverterClient({ pair, locale: localeProp }: ConverterClientPro
     setResultData(null);
   }, []);
 
+  const handleFetchRemote = useCallback(async () => {
+    if (!remoteUrl) return;
+    setFetchingRemote(true);
+    setError(null);
+    setProgress(dict.workspace.loadingFiles);
+    try {
+      const response = await fetch(remoteUrl);
+      if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
+      const blob = await response.blob();
+      const fileName = remoteUrl.split("/").pop() || "file";
+      const file = new File([blob], fileName, { type: blob.type });
+      setFiles([file]);
+      setRemoteUrl("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : dict.workspace.unexpectedError);
+    } finally {
+      setFetchingRemote(false);
+      setProgress(null);
+    }
+  }, [remoteUrl, dict]);
+
   const isImplemented = hasProcessor(pair.slug);
   const showConverter = pair.clientSide && pair.quality >= 3;
 
@@ -150,6 +178,51 @@ export function ConverterClient({ pair, locale: localeProp }: ConverterClientPro
           multiple={getMultipleForPair(pair)}
           maxSizeMB={100}
         />
+      )}
+
+      {/* URL input (when no files selected yet) */}
+      {files.length === 0 && !processing && !result && !error && (
+        <div className="mt-4">
+          <div className="relative flex items-center gap-2">
+            <div className="relative flex-1">
+              <input
+                type="url"
+                value={remoteUrl}
+                onChange={(e) => setRemoteUrl(e.target.value)}
+                placeholder="https://example.com/file.pdf"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 pe-10 text-sm text-gray-700 placeholder-gray-400 transition-colors focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:placeholder-gray-500 dark:focus:border-purple-500 dark:focus:ring-purple-900/40"
+              />
+              {remoteUrl && (
+                <button
+                  onClick={() => setRemoteUrl("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  aria-label="Clear URL"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            <button
+              onClick={handleFetchRemote}
+              disabled={!remoteUrl || fetchingRemote}
+              className="gradient-brand shrink-0 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {fetchingRemote ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  {dict.workspace.loadingFiles}
+                </span>
+              ) : (
+                dict.workspace.processFiles
+              )}
+            </button>
+          </div>
+          <p className="mt-1.5 text-center text-xs text-gray-400">
+            {dict.workspace.selectHint}
+          </p>
+        </div>
       )}
 
       {/* Processing state */}
@@ -249,7 +322,7 @@ export function ConverterClient({ pair, locale: localeProp }: ConverterClientPro
                 <span className="truncate text-gray-700 dark:text-gray-300">
                   {file.name}
                 </span>
-                <span className="ml-2 shrink-0 text-xs text-gray-500">
+                <span className="ms-2 shrink-0 text-xs text-gray-500">
                   {(file.size / 1024).toFixed(0)} {dict.workspace.kb}
                 </span>
               </li>

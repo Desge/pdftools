@@ -1,33 +1,39 @@
-// ─── Locale-aware Homepage ───
-"use client";
-
-import { useState } from "react";
-import { useParams } from "next/navigation";
+// ─── Locale-aware Homepage (server component) ───
+// Only the interactive category tabs + tool grid are client-side.
 import { TOOLS, getToolsByCategory } from "@/lib/tools";
-import { ToolCard } from "@/components/ui/tool-card";
-import { CategoryTabs } from "@/components/ui/category-tabs";
-import { t, DEFAULT_LOCALE, type LangDict } from "@/lib/i18n";
+import { t, DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@/lib/i18n";
 import { siteJsonLd } from "@/lib/seo";
-import type { ToolCategory } from "@/lib/types";
+import type { LangDict } from "@/lib/i18n";
+import { InteractiveTools } from "./home-interactive";
+import { AdBanner } from "@/components/ads/AdBanner";
 
-export default function HomePage() {
-  const params = useParams();
-  const locale = (params?.locale as string) ?? DEFAULT_LOCALE;
-  const dict = t(locale);
-  const [activeCategory, setActiveCategory] = useState<ToolCategory | "all">("all");
-  const tools = activeCategory === "all" ? TOOLS : getToolsByCategory(activeCategory);
+export function generateStaticParams() {
+  return SUPPORTED_LOCALES.map((locale) => ({ locale }));
+}
+
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const dict = t(locale as any);
+  const prefix = `/${locale}`;
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd()) }} />
-      <HeroSection dict={dict} toolCount={TOOLS.length} />
-      <ToolsSection dict={dict} tools={tools} activeCategory={activeCategory} onChange={setActiveCategory} />
+      <HeroSection dict={dict} locale={locale} toolCount={TOOLS.length} />
+      {/* 广告位 - 首页横幅 */}
+      <AdBanner slot="6666666666" format="horizontal" className="my-6" />
+      <InteractiveTools locale={locale} />
       <PrivacySection dict={dict} />
     </>
   );
 }
 
-function HeroSection({ dict, toolCount }: { dict: LangDict; toolCount: number }) {
+function HeroSection({ dict, locale, toolCount }: { dict: LangDict; locale: string; toolCount: number }) {
+  const prefix = `/${locale}`;
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-purple-50 to-white py-16 dark:from-purple-950/20 dark:to-gray-950 sm:py-24">
       <div className="absolute inset-0 overflow-hidden">
@@ -44,8 +50,8 @@ function HeroSection({ dict, toolCount }: { dict: LangDict; toolCount: number })
           {dict.hero.subtitle}
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <a href="tools/merge-pdf" className="gradient-brand rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition-transform hover:scale-105">{dict.hero.ctaMerge}</a>
-          <a href="tools/compress-pdf" className="rounded-xl border-2 border-purple-200 bg-white px-6 py-3 text-sm font-semibold text-purple-700 transition-transform hover:scale-105 dark:border-purple-800 dark:bg-gray-900 dark:text-purple-400">{dict.hero.ctaCompress}</a>
+          <a href={`${prefix}/tools/merge-pdf`} className="gradient-brand rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition-transform hover:scale-105">{dict.hero.ctaMerge}</a>
+          <a href={`${prefix}/tools/compress-pdf`} className="rounded-xl border-2 border-purple-200 bg-white px-6 py-3 text-sm font-semibold text-purple-700 transition-transform hover:scale-105 dark:border-purple-800 dark:bg-gray-900 dark:text-purple-400">{dict.hero.ctaCompress}</a>
           <a href="#all-tools" className="rounded-xl px-6 py-3 text-sm font-semibold text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">{dict.hero.ctaAll}</a>
         </div>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500 dark:text-gray-500">
@@ -54,36 +60,10 @@ function HeroSection({ dict, toolCount }: { dict: LangDict; toolCount: number })
           <span className="flex items-center gap-1.5"><span className="flex h-2 w-2 rounded-full bg-green-500" />{dict.hero.badgeNoReg}</span>
           <span className="flex items-center gap-1.5"><span className="flex h-2 w-2 rounded-full bg-green-500" />{dict.hero.badgeOffline}</span>
         </div>
-      </div>
-    </section>
-  );
-}
-
-function ToolsSection({
-  dict,
-  tools,
-  activeCategory,
-  onChange,
-}: {
-  dict: LangDict;
-  tools: typeof TOOLS;
-  activeCategory: ToolCategory | "all";
-  onChange: (c: ToolCategory | "all") => void;
-}) {
-  return (
-    <section id="all-tools" className="py-16 sm:py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{dict.tools.heading}</h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{dict.tools.countLabel(tools.length)}</p>
-          </div>
-          <CategoryTabs active={activeCategory} onChange={onChange} />
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {tools.map((tool) => (
-            <ToolCard key={tool.slug} tool={tool} />
-          ))}
+        <div className="mt-6">
+          <a href={`${prefix}/guides/`} className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-5 py-2 text-sm font-semibold text-purple-700 transition-colors hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-400 dark:hover:bg-purple-900/60">
+            📚 {dict.guides.title} →
+          </a>
         </div>
       </div>
     </section>

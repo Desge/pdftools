@@ -5,6 +5,7 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { downloadBlob } from "./pdf-render";
 import type { ProcessResult, ToolProcessor } from "./tool-processors";
+import DOMPurify from "dompurify";
 
 // ─── Dynamic imports (lazy-loaded, never imported at top level to avoid SSR issues) ───
 async function getMammoth() {
@@ -31,7 +32,7 @@ export const wordToPdfProcessor: ToolProcessor = async (files, onProgress) => {
   onProgress?.("Converting to PDF...");
   const html2pdf = await getHtml2Pdf();
   const container = document.createElement("div");
-  container.innerHTML = html;
+  container.innerHTML = DOMPurify.sanitize(html);
   container.style.padding = "40px";
   container.style.fontFamily = "Times New Roman, serif";
   container.style.fontSize = "12pt";
@@ -68,7 +69,7 @@ export const excelToPdfProcessor: ToolProcessor = async (files, onProgress) => {
   onProgress?.("Converting to PDF...");
   const html2pdf = await getHtml2Pdf();
   const container = document.createElement("div");
-  container.innerHTML = html;
+  container.innerHTML = DOMPurify.sanitize(html);
   container.style.padding = "10px";
   container.style.fontSize = "10pt";
   document.body.appendChild(container);
@@ -97,7 +98,7 @@ export const htmlToPdfProcessor: ToolProcessor = async (files, onProgress) => {
   onProgress?.("Converting to PDF...");
   const html2pdf = await getHtml2Pdf();
   const container = document.createElement("div");
-  container.innerHTML = text;
+  container.innerHTML = DOMPurify.sanitize(text);
   container.style.padding = "20px";
   container.style.fontFamily = "system-ui, sans-serif";
   document.body.appendChild(container);
@@ -131,7 +132,7 @@ export const markdownToPdfProcessor: ToolProcessor = async (files, onProgress) =
   onProgress?.("Converting to PDF...");
   const html2pdf = await getHtml2Pdf();
   const container = document.createElement("div");
-  container.innerHTML = html;
+  container.innerHTML = DOMPurify.sanitize(html);
   container.style.padding = "30px";
   container.style.fontFamily = "system-ui, -apple-system, sans-serif";
   container.style.fontSize = "11pt";

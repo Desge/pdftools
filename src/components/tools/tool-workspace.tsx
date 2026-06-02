@@ -3,10 +3,11 @@
 // Maps tool slug → real pdf-lib / pdfjs-dist processing.
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { runToolProcessor, downloadResult, hasProcessor } from "@/lib/tool-processors";
+import { getPdfjs } from "@/lib/pdfjs-singleton";
 import { t } from "@/lib/i18n";
 
 export interface ToolWorkspaceProps {
@@ -28,6 +29,8 @@ export function ToolWorkspace({
   const [files, setFiles] = useState<File[]>([]);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [fileMeta, setFileMeta] = useState<Record<string, { thumbnailUrl?: string; pageCount?: number }>>({});
   const [result, setResult] = useState<{
     message: string;
     ready: boolean;
@@ -40,6 +43,8 @@ export function ToolWorkspace({
     setResult(null);
     setError(null);
     setResultData(null);
+    setFileMeta({});
+    setProgressPercent(0);
   }, []);
 
   const handleProcess = useCallback(async () => {
@@ -51,12 +56,16 @@ export function ToolWorkspace({
     setResult(null);
 
     try {
+      setProgressPercent(0);
       const data = await runToolProcessor(slug, files, (msg) => {
         setProgress(msg);
+      }, (pct) => {
+        setProgressPercent(pct);
       });
       setResultData(data);
       setResult({ message: data.message, ready: true });
       setProgress(null);
+      setProgressPercent(0);
 
       // Auto-download single-file results
       if ((data.data && data.filename) || (data.dataUrl && data.filename)) {
@@ -79,8 +88,52 @@ export function ToolWorkspace({
     setResult(null);
     setError(null);
     setProgress(null);
+    setProgressPercent(0);
+    setFileMeta({});
     setResultData(null);
   }, []);
+
+  // ─── Generate PDF thumbnails for uploaded files ───
+  useEffect(() => {
+    if (files.length === 0) return;
+    let cancelled = false;
+
+    async function generateThumbnails() {
+      const meta: Record<string, { thumbnailUrl?: string; pageCount?: number }> = {};
+      for (const file of files) {
+        if (!file.type.includes("pdf")) continue;
+        try {
+          const pdfjs = await getPdfjs();
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+          const pageCount = pdf.numPages;
+
+          // Render first page as thumbnail
+          const page = await pdf.getPage(1);
+          const viewport = page.getViewport({ scale: 0.3 }); // small thumbnail
+          const canvas = document.createElement("canvas");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext("2d")!;
+          const renderParams: any = { canvas, canvasContext: ctx, viewport };
+          await page.render(renderParams).promise;
+          const thumbnailUrl = canvas.toDataURL("image/png");
+
+          if (!cancelled) {
+            meta[file.name] = { thumbnailUrl, pageCount };
+          }
+        } catch {
+          // Silently skip files that can't be previewed
+        }
+      }
+      if (!cancelled) {
+        setFileMeta(meta);
+      }
+    }
+
+    generateThumbnails();
+    return () => { cancelled = true; };
+  }, [files]);
 
   const isImplemented = hasProcessor(slug);
 
@@ -107,7 +160,7 @@ export function ToolWorkspace({
         />
       )}
 
-      {/* Processing state */}
+      {/* Processing state with progress bar */}
       {processing && (
         <div className="flex flex-col items-center rounded-2xl border-2 border-purple-200 bg-purple-50/50 py-12 text-center dark:border-purple-800 dark:bg-purple-950/20">
           <div className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600" />
@@ -116,6 +169,20 @@ export function ToolWorkspace({
           </p>
           {progress && (
             <p className="mt-2 text-sm text-purple-500">{progress}</p>
+          )}
+          {/* Progress bar */}
+          {progressPercent > 0 && (
+            <div className="mt-4 w-full max-w-xs">
+              <div className="h-2.5 w-full overflow-hidden rounded-full bg-purple-200 dark:bg-purple-800">
+                <div
+                  className="h-full rounded-full bg-purple-600 transition-all duration-300 ease-out"
+                  style={{ width: `${Math.min(progressPercent, 100)}%` }}
+                />
+              </div>
+              <p className="mt-1.5 text-xs font-medium text-purple-600 dark:text-purple-400">
+                {dict.workspace.processing} {Math.round(progressPercent)}%
+              </p>
+            </div>
           )}
         </div>
       )}
@@ -195,21 +262,46 @@ export function ToolWorkspace({
             </button>
           </div>
 
-          <ul className="mb-4 max-h-48 space-y-1.5 overflow-y-auto">
-            {files.map((file, i) => (
-              <li
-                key={`${file.name}-${i}`}
-                className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-sm dark:bg-gray-800"
-              >
-                <span className="truncate text-gray-700 dark:text-gray-300">
-                  {file.name}
-                </span>
-                <span className="ml-2 shrink-0 text-xs text-gray-500">
-                  {(file.size / 1024).toFixed(0)} {dict.workspace.kb}
-                </span>
-              </li>
-            ))}
+          <ul className="mb-4 max-h-56 space-y-2 overflow-y-auto">
+            {files.map((file, i) => {
+              const meta = fileMeta[file.name];
+              return (
+                <li
+                  key={`${file.name}-${i}`}
+                  className="flex items-center gap-3 rounded-lg bg-gray-50 px-3 py-2 text-sm dark:bg-gray-800"
+                >
+                  {/* Thumbnail preview for PDF files */}
+                  {meta?.thumbnailUrl ? (
+                    <img
+                      src={meta.thumbnailUrl}
+                      alt={file.name}
+                      className="h-14 w-10 flex-shrink-0 rounded border border-gray-200 object-cover dark:border-gray-700"
+                    />
+                  ) : file.type.includes("pdf") ? (
+                    <div className="flex h-14 w-10 flex-shrink-0 items-center justify-center rounded border border-gray-200 bg-gray-100 text-xs text-gray-400 dark:border-gray-700 dark:bg-gray-700">
+                      PDF
+                    </div>
+                  ) : null}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-gray-700 dark:text-gray-300">
+                      {file.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {(file.size / 1024).toFixed(0)} {dict.workspace.kb}
+                      {meta?.pageCount ? ` · ${meta.pageCount} ${meta.pageCount === 1 ? "page" : "pages"}` : ""}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
+
+          {/* Large file warning */}
+          {files.some((f) => f.size > 50 * 1024 * 1024) && (
+            <p className="mb-3 text-xs text-amber-600 dark:text-amber-400">
+              ⚠ {dict.workspace.largeFileWarning}
+            </p>
+          )}
 
           {/* Process button */}
           <button
@@ -255,11 +347,9 @@ function getFileConfig(slug: string): { accept: string; multiple: boolean } | nu
     "rotate-pdf": { accept: ".pdf", multiple: false },
     "watermark-pdf": { accept: ".pdf", multiple: false },
     "page-numbers": { accept: ".pdf", multiple: false },
-    "edit-pdf": { accept: ".pdf", multiple: false },
-    "organize-pdf": { accept: ".pdf", multiple: false },
-    "crop-pdf": { accept: ".pdf", multiple: false },
     "protect-pdf": { accept: ".pdf", multiple: false },
     "unlock-pdf": { accept: ".pdf", multiple: false },
+    "pdf-to-image": { accept: ".pdf", multiple: false },
     "html-to-pdf": { accept: ".html,.htm", multiple: false },
     "markdown-to-pdf": { accept: ".md,.markdown", multiple: false },
     "heic-to-pdf": { accept: ".heic,.heif", multiple: true },
@@ -267,6 +357,7 @@ function getFileConfig(slug: string): { accept: string; multiple: boolean } | nu
     "excel-to-pdf": { accept: ".xlsx,.xls", multiple: false },
     "epub-to-pdf": { accept: ".epub", multiple: false },
     "ocr-pdf": { accept: ".pdf", multiple: false },
+    "gif-editor": { accept: ".gif", multiple: false },
   };
   return configs[slug] ?? null;
 }

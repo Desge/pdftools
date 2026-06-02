@@ -1,14 +1,10 @@
 // ─── PDF Render Utilities (pdfjs-dist based) ───
 // Handles: compress PDF, PDF→image, text extraction
-// Uses pdfjs-dist in main-thread mode (disableWorker) for MVP simplicity.
-// Will be migrated to Web Workers for production.
+// Uses pdfjs-dist via lazy singleton (see pdfjs-singleton.ts).
 
-import * as pdfjsLib from "pdfjs-dist";
+import { getPdfjs } from "./pdfjs-singleton";
+import type * as PdfjsType from "pdfjs-dist";
 import { PDFDocument } from "pdf-lib";
-
-// ─── Configure pdfjs-dist ───
-// Use a simple CDN worker path. For production, self-host the worker file.
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 interface RenderOptions {
   scale?: number; // default 2.0 for good quality
@@ -20,7 +16,7 @@ interface RenderOptions {
  * Render a single PDF page to a Canvas → return data URL.
  */
 async function renderPageToDataUrl(
-  page: pdfjsLib.PDFPageProxy,
+  page: PdfjsType.PDFPageProxy,
   opts: RenderOptions = {}
 ): Promise<string> {
   const { scale = 2.0, format = "image/jpeg", quality = 0.85 } = opts;
@@ -55,15 +51,16 @@ function dataUrlToArrayBuffer(dataUrl: string): ArrayBuffer {
  */
 export async function compressPDF(
   pdfBuffer: ArrayBuffer,
-  opts: { quality?: number; format?: "image/jpeg" | "image/webp" } = {}
+  opts: { quality?: number; format?: "image/jpeg" | "image/webp"; scale?: number } = {}
 ): Promise<Uint8Array> {
-  const { quality = 0.45, format = "image/jpeg" } = opts;
+  const pdfjsLib = await getPdfjs();
+  const { quality = 0.45, format = "image/jpeg", scale = 2.0 } = opts;
   const pdf = await pdfjsLib.getDocument({ data: pdfBuffer }).promise;
   const newDoc = await PDFDocument.create();
 
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
-    const dataUrl = await renderPageToDataUrl(page, { scale: 2.0, format, quality });
+    const dataUrl = await renderPageToDataUrl(page, { scale, format, quality });
     const imgBuffer = dataUrlToArrayBuffer(dataUrl);
     const image = format === "image/jpeg"
       ? await newDoc.embedJpg(imgBuffer)
@@ -82,6 +79,7 @@ export async function pdfToJPG(
   pdfBuffer: ArrayBuffer,
   opts: { scale?: number; quality?: number } = {}
 ): Promise<{ dataUrl: string; pageNum: number; pages: number }[]> {
+  const pdfjsLib = await getPdfjs();
   const { scale = 2.0, quality = 0.9 } = opts;
   const pdf = await pdfjsLib.getDocument({ data: pdfBuffer }).promise;
   const results: { dataUrl: string; pageNum: number; pages: number }[] = [];
@@ -106,6 +104,7 @@ export async function pdfToPNG(
   pdfBuffer: ArrayBuffer,
   opts: { scale?: number } = {}
 ): Promise<{ dataUrl: string; pageNum: number; pages: number }[]> {
+  const pdfjsLib = await getPdfjs();
   const { scale = 2.0 } = opts;
   const pdf = await pdfjsLib.getDocument({ data: pdfBuffer }).promise;
   const results: { dataUrl: string; pageNum: number; pages: number }[] = [];
@@ -126,6 +125,7 @@ export async function pdfToPNG(
  * Extract text from a PDF.
  */
 export async function extractText(pdfBuffer: ArrayBuffer): Promise<string> {
+  const pdfjsLib = await getPdfjs();
   const pdf = await pdfjsLib.getDocument({ data: pdfBuffer }).promise;
   const texts: string[] = [];
 
@@ -145,6 +145,7 @@ export async function extractText(pdfBuffer: ArrayBuffer): Promise<string> {
  * Get PDF page count (quick, no rendering).
  */
 export async function getPageCount(pdfBuffer: ArrayBuffer): Promise<number> {
+  const pdfjsLib = await getPdfjs();
   const pdf = await pdfjsLib.getDocument({ data: pdfBuffer }).promise;
   return pdf.numPages;
 }

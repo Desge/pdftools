@@ -5,6 +5,9 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { downloadBlob } from "@/lib/pdf-render";
+import { getPdfjs } from "@/lib/pdfjs-singleton";
+import { useParams } from "next/navigation";
+import { t } from "@/lib/i18n";
 
 // ─── Types ───
 interface PageItem {
@@ -15,18 +18,6 @@ interface PageItem {
   selected: boolean;
 }
 
-// ─── Inline pdfjs import ───
-let pdfjsLib: typeof import("pdfjs-dist") | null = null;
-async function getPdfjs() {
-  if (!pdfjsLib) {
-    pdfjsLib = await import("pdfjs-dist");
-    (pdfjsLib as any).GlobalWorkerOptions.workerSrc =
-      `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${(pdfjsLib as any).version}/pdf.worker.min.mjs`;
-  }
-  return pdfjsLib;
-}
-
-// ─── Component ───
 export function OrganizePdfWorkspace() {
   const [file, setFile] = useState<File | null>(null);
   const [pages, setPages] = useState<PageItem[]>([]);
@@ -38,6 +29,10 @@ export function OrganizePdfWorkspace() {
   const dragItem = useRef<string | null>(null);
   const dragOverPos = useRef<"before" | "after" | null>(null);
 
+  const params = useParams();
+  const locale = (params?.locale as string) || "en";
+  const dict = t(locale);
+
   // Load PDF and render thumbnails
   const handleFile = useCallback(async (files: File[]) => {
     if (files.length === 0) return;
@@ -46,6 +41,8 @@ export function OrganizePdfWorkspace() {
     setLoading(true);
     setError(null);
     setResult(null);
+
+    const d = t(locale);
 
     try {
       const pdfjs = await getPdfjs();
@@ -67,17 +64,17 @@ export function OrganizePdfWorkspace() {
           index: i - 1,
           id: `page-${i}`,
           thumbnail: canvas.toDataURL("image/jpeg", 0.7),
-          label: `Page ${i}`,
+          label: `${d.workspace.page} ${i}`,
           selected: false,
         });
       }
 
       setPages(items);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load PDF");
+      setError(err instanceof Error ? err.message : d.workspace.failedToLoad);
     }
     setLoading(false);
-  }, []);
+  }, [locale]);
 
   // Delete a page
   const deletePage = useCallback((id: string) => {
@@ -164,10 +161,10 @@ export function OrganizePdfWorkspace() {
       setResult(result);
       downloadBlob(result, file.name.replace(/\.pdf$/i, "") + "_organized.pdf");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Processing failed");
+      setError(err instanceof Error ? err.message : t(locale).workspace.processingFailed);
     }
     setProcessing(false);
-  }, [file, pages]);
+  }, [file, pages, locale]);
 
   const handleClear = () => {
     setFile(null);
@@ -183,11 +180,11 @@ export function OrganizePdfWorkspace() {
       <div className="mb-4 flex items-center justify-between">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/40 dark:text-green-400">
           <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-          No upload — drag & drop pages right in your browser
+          {dict.workspace.noUploadOrganize}
         </span>
         {pages.length > 0 && (
           <button onClick={handleClear} className="text-xs font-medium text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">
-            Reset
+            {dict.workspace.reset}
           </button>
         )}
       </div>
@@ -195,6 +192,13 @@ export function OrganizePdfWorkspace() {
       {/* Dropzone */}
       {!file && (
         <FileDropzone onFiles={handleFile} accept=".pdf" multiple={false} />
+      )}
+
+      {/* Large file warning */}
+      {file && file.size > 50 * 1024 * 1024 && (
+        <p className="mb-3 text-xs text-amber-600 dark:text-amber-400">
+          ⚠ {dict.workspace.largeFileWarning}
+        </p>
       )}
 
       {/* Loading state */}
@@ -208,7 +212,7 @@ export function OrganizePdfWorkspace() {
           {/* Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {pages.length} page{pages.length !== 1 ? "s" : ""} — drag to reorder, click to delete
+              {dict.workspace.pagesCount(pages.length)} {dict.workspace.dragReorderClickDelete}
             </span>
           </div>
 
@@ -235,7 +239,7 @@ export function OrganizePdfWorkspace() {
                 <button
                   onClick={(e) => { e.stopPropagation(); deletePage(page.id); }}
                   className="absolute -top-2 -right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
-                  title="Remove page"
+                  title={dict.workspace.removePage}
                 >
                   ✕
                 </button>
@@ -244,8 +248,12 @@ export function OrganizePdfWorkspace() {
                 <img
                   src={page.thumbnail}
                   alt={page.label}
+                  width={400}
+                  height={300}
                   className="h-auto w-full rounded-xl shadow-sm"
+                  style={{ aspectRatio: "400 / 300" }}
                   draggable={false}
+                  loading="lazy"
                 />
 
                 {/* Label */}
@@ -267,13 +275,13 @@ export function OrganizePdfWorkspace() {
             disabled={processing}
             className="gradient-brand w-full rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {processing ? "Processing..." : `Save New Order (${pages.length} pages)`}
+            {processing ? dict.workspace.processing : dict.workspace.saveNewOrder(pages.length)}
           </button>
 
           {processing && (
             <div className="flex items-center justify-center gap-3 text-sm text-purple-600">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-purple-200 border-t-purple-600" />
-              Reorganizing pages...
+              {dict.workspace.reorganizingPages}
             </div>
           )}
         </div>
@@ -283,7 +291,7 @@ export function OrganizePdfWorkspace() {
       {error && (
         <div className="mt-4 rounded-xl border-2 border-red-200 bg-red-50/50 p-4 text-center dark:border-red-800 dark:bg-red-950/20">
           <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
-          <button onClick={handleClear} className="mt-2 text-xs font-medium text-red-600 hover:underline">Try Again</button>
+            <button onClick={handleClear} className="mt-2 text-xs font-medium text-red-600 hover:underline">{dict.workspace.tryAgain}</button>
         </div>
       )}
     </div>

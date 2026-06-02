@@ -4,17 +4,32 @@ import type { ToolMeta, ConversionPair } from "./types";
 import { SUPPORTED_LOCALES } from "./i18n";
 
 const SITE_NAME = "toolconv — Free Online PDF Tools";
-const SITE_URL = "https://pdf.toolconv.com";
+export const SITE_URL = "https://pdf.toolconv.com";
 const SITE_DESCRIPTION =
   "Free online PDF tools that run entirely in your browser. Merge, split, compress, convert, and edit PDFs — no upload, no sign-up, 100% private.";
 
-/** Default OG image path */
-const OG_IMAGE = `${SITE_URL}/og-image.png`;
+/** Default OG image path (for static pages — pricing, about, etc.) */
+const OG_IMAGE = `${SITE_URL}/og/default.png`;
+
+/** Tool-specific OG image path — uses slug to generate unique OG images */
+function toolOgImage(slug: string): string {
+  return `${SITE_URL}/og/${slug}.png`;
+}
+
+/** Map locale codes to Open Graph locale values */
+export function ogLocale(locale: string): string {
+  const map: Record<string, string> = {
+    en: "en_US", zh: "zh_CN", ja: "ja_JP", ko: "ko_KR",
+    es: "es_ES", fr: "fr_FR", de: "de_DE", pt: "pt_BR",
+    ru: "ru_RU", ar: "ar_SA", hi: "hi_IN", it: "it_IT",
+  };
+  return map[locale] || "en_US";
+}
 
 /** Build hreflang alternates for a given path (e.g. "/tools/merge-pdf") */
 export function hreflangAlternates(path: string = "", locale: string = "en"): NonNullable<Metadata["alternates"]>["languages"] {
   const languages: Record<string, string> = {
-    "x-default": `${SITE_URL}/en${path}`,
+    "x-default": `${SITE_URL}${path}`,
   };
   for (const loc of SUPPORTED_LOCALES) {
     languages[loc] = `${SITE_URL}/${loc}${path}`;
@@ -62,6 +77,10 @@ export function baseMeta(): Metadata {
     icons: {
       icon: "/favicon.ico",
     },
+    // Google Site Verification — replace with your real verification code from Google Search Console
+    verification: {
+      google: "toolconv-pdf-site",
+    },
   };
 }
 
@@ -83,21 +102,22 @@ export function toolMeta(tool: ToolMeta, locale: string = "en"): Metadata {
       title: `${title} — Free Online PDF Tool | toolconv`,
       description: desc,
       url,
+      locale: ogLocale(locale),
       type: "website",
-      images: [{ url: OG_IMAGE, width: 1200, height: 630 }],
+      images: [{ url: toolOgImage(tool.slug), width: 1200, height: 630 }], // Generate OG images at /public/og/{slug}.png
     },
     twitter: {
       card: "summary_large_image",
       title,
       description: desc,
-      images: [OG_IMAGE],
+      images: [toolOgImage(tool.slug)],
     },
   };
 }
 
 /** SEO metadata for a conversion page */
 export function conversionMeta(pair: ConversionPair, locale: string = "en"): Metadata {
-  const title = `${pair.from.name} to ${pair.to.name} Converter`;
+  const title = `${pair.from.name} to ${pair.to.name} Converter — Free Online | toolconv`;
   const desc = `Convert ${pair.from.name} to ${pair.to.name} online, free, and 100% private. No upload required — all processing happens in your browser.`;
   const url = `${SITE_URL}/${locale}/convert/${pair.slug}/`;
 
@@ -118,28 +138,29 @@ export function conversionMeta(pair: ConversionPair, locale: string = "en"): Met
       title: `${title} — Free Online | toolconv`,
       description: desc,
       url,
+      locale: ogLocale(locale),
       type: "website",
-      images: [{ url: OG_IMAGE, width: 1200, height: 630 }],
+      images: [{ url: toolOgImage(pair.slug), width: 1200, height: 630 }], // Generate OG images at /public/og/{slug}.png
     },
     twitter: {
       card: "summary_large_image",
       title,
       description: desc,
-      images: [OG_IMAGE],
+      images: [toolOgImage(pair.slug)],
     },
   };
 }
 
-/** JSON-LD WebApplication schema for a tool page */
+/** JSON-LD SoftwareApplication schema for a tool page */
 export function toolJsonLd(tool: ToolMeta, locale: string = "en"): object {
   return {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
+    "@type": "SoftwareApplication",
     name: tool.title,
     description: tool.longDescription,
     url: `${SITE_URL}/${locale}/tools/${tool.slug}/`,
-    applicationCategory: "UtilityApplication",
-    operatingSystem: "All",
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Web Browser",
     offers: {
       "@type": "Offer",
       price: "0",

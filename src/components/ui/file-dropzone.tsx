@@ -2,6 +2,8 @@
 "use client";
 
 import { useCallback, useState, type DragEvent } from "react";
+import { useParams } from "next/navigation";
+import { t } from "@/lib/i18n";
 
 interface FileDropzoneProps {
   onFiles: (files: File[]) => void;
@@ -16,22 +18,39 @@ export function FileDropzone({
   multiple = true,
   maxSizeMB = 100,
 }: FileDropzoneProps) {
+  const params = useParams();
+  const locale = (params?.locale as string) || "en";
+  const dict = t(locale);
+
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleFiles = useCallback(
-    (fileList: FileList | null) => {
+    async (fileList: FileList | null) => {
       if (!fileList) return;
       const files = Array.from(fileList);
 
       // Size validation
       const oversized = files.filter((f) => f.size > maxSizeMB * 1024 * 1024);
       if (oversized.length > 0) {
-        setError(`File(s) exceed ${maxSizeMB}MB limit: ${oversized.map((f) => f.name).join(", ")}`);
+        setError(`${dict.dropzone.fileExceed} ${maxSizeMB}MB: ${oversized.map((f) => f.name).join(", ")}`);
         return;
       }
 
       setError(null);
+
+      // File type validation: check PDF header for .pdf files
+      if (accept.includes(".pdf")) {
+        for (const file of files) {
+          const buf = await file.slice(0, 5).arrayBuffer();
+          const header = new TextDecoder().decode(buf);
+          if (!header.startsWith("%PDF-")) {
+            setError(dict.dropzone.invalidFileType);
+            return;
+          }
+        }
+      }
+
       onFiles(files);
     },
     [onFiles, maxSizeMB]
@@ -59,7 +78,7 @@ export function FileDropzone({
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 transition-all duration-200 ${
+        className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 transition-all duration-200 min-h-[200px] ${
           isDragging
             ? "border-purple-500 bg-purple-50 dark:border-purple-400 dark:bg-purple-950/20"
             : "border-gray-300 bg-gray-50 hover:border-purple-300 hover:bg-purple-50/50 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-purple-700"
@@ -73,6 +92,7 @@ export function FileDropzone({
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -83,13 +103,13 @@ export function FileDropzone({
         </svg>
 
         <p className="mb-2 text-base font-medium text-gray-700 dark:text-gray-300">
-          {isDragging ? "Drop files here" : "Drag & drop files here"}
+          {isDragging ? dict.dropzone.dropHere : dict.dropzone.dragDropHere}
         </p>
-        <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">or click to browse</p>
+        <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">{dict.dropzone.orClickBrowse}</p>
 
         <p className="text-xs text-gray-400 dark:text-gray-500">
-          {accept.replace(/\./g, "").toUpperCase()} files, up to {maxSizeMB}MB each
-          {multiple ? " (multiple files supported)" : ""}
+          {accept.replace(/\./g, "").toUpperCase()} {dict.dropzone.filesUpTo} {maxSizeMB}MB
+          {multiple ? ` ${dict.dropzone.multipleSupported}` : ""}
         </p>
 
         <input

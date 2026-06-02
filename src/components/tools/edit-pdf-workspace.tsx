@@ -3,8 +3,11 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
+import { useParams } from "next/navigation";
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { downloadBlob } from "@/lib/pdf-render";
+import { getPdfjs } from "@/lib/pdfjs-singleton";
+import { t } from "@/lib/i18n";
 
 // ─── Types ───
 interface Annotation {
@@ -32,20 +35,13 @@ const COLORS = [
   { label: "Blue", value: "#2563eb" },
   { label: "Green", value: "#16a34a" },
   { label: "Purple", value: "#7c3aed" },
+  { label: "Orange", value: "#ea580c" },
+  { label: "Teal", value: "#0d9488" },
+  { label: "Pink", value: "#db2777" },
 ];
 
 const RENDER_SCALE = 1.5;
-
-// ─── Inline pdfjs import ───
-let pdfjsLib: typeof import("pdfjs-dist") | null = null;
-async function getPdfjs() {
-  if (!pdfjsLib) {
-    pdfjsLib = await import("pdfjs-dist");
-    (pdfjsLib as any).GlobalWorkerOptions.workerSrc =
-      `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${(pdfjsLib as any).version}/pdf.worker.min.mjs`;
-  }
-  return pdfjsLib;
-}
+const MAX_HISTORY = 50;
 
 // ─── Helper: hex → pdf-lib rgb ───
 function hexToRgb(hex: string) {
@@ -70,10 +66,46 @@ export function EditPdfWorkspace() {
   const [result, setResult] = useState<Uint8Array | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Undo/redo history
+  const [history, setHistory] = useState<Annotation[][]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
+  // Selection state for Select All
+  const [selectedAnnotationIndices, setSelectedAnnotationIndices] = useState<Set<number>>(new Set());
+
+  const params = useParams();
+  const locale = (params?.locale as string) || "en";
+  const dict = t(locale);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const [imageNaturalSize, setImageNaturalSize] = useState<{ w: number; h: number } | null>(null);
+
+  // ─── History management ───
+  const pushHistory = useCallback((newAnnotations: Annotation[]) => {
+    setHistory((prev) => {
+      const trimmed = prev.slice(0, historyIndex + 1);
+      const next = [...trimmed, [...newAnnotations]];
+      if (next.length > MAX_HISTORY) next.shift();
+      return next;
+    });
+    setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY - 1));
+  }, [historyIndex]);
+
+  const handleUndo = useCallback(() => {
+    if (historyIndex <= 0) return;
+    const newIndex = historyIndex - 1;
+    setHistoryIndex(newIndex);
+    setAnnotations(history[newIndex] ? [...history[newIndex]] : []);
+  }, [historyIndex, history]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex >= history.length - 1) return;
+    const newIndex = historyIndex + 1;
+    setHistoryIndex(newIndex);
+    setAnnotations(history[newIndex] ? [...history[newIndex]] : []);
+  }, [historyIndex, history]);
 
   // ─── Load PDF and render pages ───
   const handleFile = useCallback(async (files: File[]) => {
@@ -84,6 +116,8 @@ export function EditPdfWorkspace() {
     setError(null);
     setResult(null);
     setAnnotations([]);
+    setHistory([]);
+    setHistoryIndex(-1);
     setActivePage(0);
 
     try {
@@ -114,7 +148,7 @@ export function EditPdfWorkspace() {
 
       setPages(renderedPages);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load PDF");
+      setError(err instanceof Error ? err.message : dict.workspace.failedToLoad);
     }
     setLoading(false);
   }, []);
@@ -180,20 +214,54 @@ export function EditPdfWorkspace() {
         color: textColor,
       };
 
-      setAnnotations((prev) => [...prev, annotation]);
+      setAnnotations((prev) => {
+        const next = [...prev, annotation];
+        pushHistory(next);
+        return next;
+      });
+      setTextInput("");
     },
-    [tool, textInput, fontSize, textColor, activePage, getPdfPosition]
+    [tool, textInput, fontSize, textColor, activePage, getPdfPosition, pushHistory]
   );
 
   // ─── Remove annotation ───
   const removeAnnotation = useCallback((index: number) => {
-    setAnnotations((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+    setAnnotations((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      pushHistory(next);
+      return next;
+    });
+  }, [pushHistory]);
 
   // ─── Clear page annotations ───
   const clearPageAnnotations = useCallback(() => {
-    setAnnotations((prev) => prev.filter((a) => a.pageIndex !== activePage));
-  }, [activePage]);
+    setAnnotations((prev) => {
+      const next = prev.filter((a) => a.pageIndex !== activePage);
+      pushHistory(next);
+      return next;
+    });
+  }, [activePage, pushHistory]);
+
+  // ─── Select all annotations on current page ───
+  const selectAllAnnotations = useCallback(() => {
+    const currentIndices = annotations
+      .map((a, i) => (a.pageIndex === activePage ? i : -1))
+      .filter((i) => i >= 0);
+    
+    if (currentIndices.length === 0) return;
+    
+    setSelectedAnnotationIndices((prev) => {
+      // If all current page annotations are already selected, deselect all
+      const allSelected = currentIndices.every((i) => prev.has(i));
+      if (allSelected) {
+        return new Set();
+      }
+      // Select all annotations on current page
+      const next = new Set(prev);
+      currentIndices.forEach((i) => next.add(i));
+      return next;
+    });
+  }, [annotations, activePage]);
 
   // ─── Convert PDF coord to display coord for overlay rendering ───
   const pdfToDisplay = useCallback(
@@ -262,7 +330,7 @@ export function EditPdfWorkspace() {
       setResult(resultBytes);
       downloadBlob(resultBytes, file.name.replace(/\.pdf$/i, "") + "_edited.pdf");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Processing failed");
+      setError(err instanceof Error ? err.message : dict.workspace.processingFailed);
     }
     setProcessing(false);
   }, [file, pages, annotations]);
@@ -273,6 +341,8 @@ export function EditPdfWorkspace() {
     setPages([]);
     setActivePage(0);
     setAnnotations([]);
+    setHistory([]);
+    setHistoryIndex(-1);
     setResult(null);
     setError(null);
     setImageNaturalSize(null);
@@ -281,6 +351,13 @@ export function EditPdfWorkspace() {
   // ─── Get current page annotations ───
   const currentAnnotations = annotations.filter((a) => a.pageIndex === activePage);
 
+  // Font size presets
+  const FONT_SIZE_PRESETS = [
+    { label: dict.workspace.fontSmall, value: 12 },
+    { label: dict.workspace.fontMedium, value: 20 },
+    { label: dict.workspace.fontLarge, value: 28 },
+  ];
+
   // ─── Render ───
   return (
     <div>
@@ -288,11 +365,11 @@ export function EditPdfWorkspace() {
       <div className="mb-4 flex items-center justify-between">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/40 dark:text-green-400">
           <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-          No upload — all editing happens locally
+          {dict.workspace.noUploadEdit}
         </span>
         {file && (
           <button onClick={handleClear} className="text-xs font-medium text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">
-            Reset
+            {dict.workspace.reset}
           </button>
         )}
       </div>
@@ -300,12 +377,19 @@ export function EditPdfWorkspace() {
       {/* Dropzone */}
       {!file && <FileDropzone onFiles={handleFile} accept=".pdf" multiple={false} />}
 
+      {/* Large file warning */}
+      {file && file.size > 50 * 1024 * 1024 && (
+        <p className="mb-3 text-xs text-amber-600 dark:text-amber-400">
+          ⚠ {dict.workspace.largeFileWarning}
+        </p>
+      )}
+
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center rounded-xl bg-gray-50 py-20 dark:bg-gray-900">
           <div className="flex items-center gap-3">
             <div className="h-6 w-6 animate-spin rounded-full border-3 border-purple-200 border-t-purple-600" />
-            <span className="text-sm text-gray-500">Loading PDF pages...</span>
+            <span className="text-sm text-gray-500">{dict.workspace.loadingPages}</span>
           </div>
         </div>
       )}
@@ -313,6 +397,37 @@ export function EditPdfWorkspace() {
       {/* Editor UI */}
       {pages.length > 0 && !loading && (
         <div className="space-y-4">
+          {/* ─── Mini Toolbar (top of canvas area) ─── */}
+          <div className="flex flex-wrap items-center justify-between gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleUndo}
+                disabled={historyIndex <= 0}
+                className="rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-200 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30 dark:text-gray-400 dark:hover:bg-gray-700"
+                title={dict.workspace.undo}
+              >
+                ↩
+              </button>
+              <button
+                onClick={handleRedo}
+                disabled={historyIndex >= history.length - 1}
+                className="rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-200 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30 dark:text-gray-400 dark:hover:bg-gray-700"
+                title={dict.workspace.redo}
+              >
+                ↪
+              </button>
+              <span className="mx-1 h-4 w-px bg-gray-300 dark:bg-gray-600" />
+              <span className="text-[10px] text-gray-400">
+                {history.length > 0 ? `${historyIndex + 1}/${history.length}` : "0/0"}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="hidden text-[10px] text-gray-400 sm:inline">{dict.workspace.page} {activePage + 1}</span>
+              <span className="hidden text-[10px] text-gray-400 sm:inline">·</span>
+              <span className="text-[10px] text-gray-400">{currentAnnotations.length}</span>
+            </div>
+          </div>
+
           {/* ─── Toolbar ─── */}
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900">
             {/* Tool selector */}
@@ -325,7 +440,7 @@ export function EditPdfWorkspace() {
                     : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 }`}
               >
-                ✏️ Text
+                {dict.workspace.textMode}
               </button>
               <button
                 onClick={() => setTool("select")}
@@ -335,7 +450,7 @@ export function EditPdfWorkspace() {
                     : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 }`}
               >
-                👆 Select
+                {dict.workspace.selectMode}
               </button>
             </div>
 
@@ -346,24 +461,44 @@ export function EditPdfWorkspace() {
               type="text"
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
-              placeholder="Enter text to add..."
+              placeholder={dict.workspace.enterTextPlaceholder}
               className="min-w-[140px] flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder:text-gray-500"
             />
 
             <div className="h-5 w-px bg-gray-200 dark:bg-gray-700" />
 
-            {/* Font size */}
-            <select
-              value={fontSize}
-              onChange={(e) => setFontSize(Number(e.target.value))}
-              className="rounded-lg border border-gray-300 px-2 py-1.5 text-xs text-gray-700 focus:border-purple-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-            >
-              {FONT_SIZES.map((s) => (
-                <option key={s} value={s}>
-                  {s}px
-                </option>
-              ))}
-            </select>
+            {/* Font size selector */}
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-gray-500 dark:text-gray-400">{dict.workspace.fontSizeLabel}</span>
+              <select
+                value={fontSize}
+                onChange={(e) => setFontSize(Number(e.target.value))}
+                className="rounded-lg border border-gray-300 px-2 py-1.5 text-xs text-gray-700 focus:border-purple-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+              >
+                {FONT_SIZES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}px
+                  </option>
+                ))}
+              </select>
+              <div className="ml-1 flex gap-0.5">
+                {FONT_SIZE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.value}
+                    onClick={() => setFontSize(preset.value)}
+                    className={`rounded px-1.5 py-1 text-[10px] transition-colors ${
+                      fontSize === preset.value
+                        ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                        : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-5 w-px bg-gray-200 dark:bg-gray-700" />
 
             {/* Color picker */}
             <div className="flex items-center gap-1">
@@ -378,9 +513,38 @@ export function EditPdfWorkspace() {
                   }`}
                   style={{ backgroundColor: c.value }}
                   title={c.label}
+                  aria-label={c.label}
                 />
               ))}
+              {/* Native color picker for custom colors */}
+              <input
+                type="color"
+                value={textColor}
+                onChange={(e) => setTextColor(e.target.value)}
+                className="h-6 w-6 cursor-pointer rounded-full border-0 p-0"
+                title="Custom color"
+              />
             </div>
+
+            <div className="h-5 w-px bg-gray-200 dark:bg-gray-700" />
+
+            {/* Select All / Clear buttons */}
+            {currentAnnotations.length > 0 && (
+              <>
+                <button
+                  onClick={selectAllAnnotations}
+                  className="rounded-lg border border-red-200 px-2.5 py-1 text-xs text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/20"
+                >
+                  {dict.workspace.selectAllAnnotations} ({currentAnnotations.length})
+                </button>
+                <button
+                  onClick={clearPageAnnotations}
+                  className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs text-gray-600 hover:border-red-300 hover:text-red-600 dark:border-gray-700 dark:text-gray-400 dark:hover:border-red-600"
+                >
+                  {dict.workspace.clearPage}
+                </button>
+              </>
+            )}
           </div>
 
           {/* ─── Page Navigation ─── */}
@@ -396,7 +560,7 @@ export function EditPdfWorkspace() {
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                   }`}
                 >
-                  Page {i + 1}
+                  {dict.workspace.page} {i + 1}
                 </button>
               ))}
             </div>
@@ -407,7 +571,7 @@ export function EditPdfWorkspace() {
                 disabled={activePage === 0}
                 className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs text-gray-600 hover:border-purple-300 hover:text-purple-600 disabled:opacity-40 disabled:cursor-not-allowed dark:border-gray-700 dark:text-gray-400 dark:hover:border-purple-600"
               >
-                ◀ Prev
+                {dict.workspace.prev}
               </button>
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {activePage + 1} / {pages.length}
@@ -417,7 +581,7 @@ export function EditPdfWorkspace() {
                 disabled={activePage === pages.length - 1}
                 className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs text-gray-600 hover:border-purple-300 hover:text-purple-600 disabled:opacity-40 disabled:cursor-not-allowed dark:border-gray-700 dark:text-gray-400 dark:hover:border-purple-600"
               >
-                Next ▶
+                {dict.workspace.next}
               </button>
             </div>
           </div>
@@ -428,13 +592,14 @@ export function EditPdfWorkspace() {
             className="relative overflow-auto rounded-xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-950"
             style={{ maxHeight: "65vh" }}
           >
-            {/* The page image (PDF rendered to canvas) */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={imageRef}
               src={pages[activePage]?.dataUrl}
-              alt={`Page ${activePage + 1}`}
+              alt={`${dict.workspace.page} ${activePage + 1}`}
               onLoad={onImageLoad}
+              width={800}
+              height={600}
               className="block w-full"
               draggable={false}
             />
@@ -495,8 +660,8 @@ export function EditPdfWorkspace() {
           {/* ─── Tooltip ─── */}
           <div className="rounded-lg bg-purple-50 px-3 py-2 text-xs text-purple-700 dark:bg-purple-950/30 dark:text-purple-400">
             {tool === "text"
-              ? "Click anywhere on the page to place your text. Switch to Select mode to delete annotations."
-              : "Click on an annotation to delete it. Switch to Text mode to add more text."}
+              ? dict.workspace.textModeTip
+              : dict.workspace.selectModeTip}
           </div>
 
           {/* ─── Annotations Summary ─── */}
@@ -504,13 +669,13 @@ export function EditPdfWorkspace() {
             <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900">
               <div className="mb-2 flex items-center justify-between">
                 <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  Annotations ({annotations.length} total)
+                  {dict.workspace.annotationsCount(annotations.length)}
                 </h3>
                 <button
                   onClick={clearPageAnnotations}
                   className="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
                 >
-                  Clear page
+                  {dict.workspace.clearPage}
                 </button>
               </div>
               <div className="max-h-24 space-y-1 overflow-y-auto">
@@ -523,13 +688,13 @@ export function EditPdfWorkspace() {
                       <span className="font-medium" style={{ color: ann.color }}>
                         {ann.text}
                       </span>
-                      <span className="ml-1 text-gray-400">
+                      <span className="ms-1 text-gray-400">
                         (p{ann.pageIndex + 1}, {ann.fontSize}px)
                       </span>
                     </span>
                     <button
                       onClick={() => removeAnnotation(i)}
-                      className="ml-2 shrink-0 text-gray-400 hover:text-red-600"
+                      className="ms-2 shrink-0 text-gray-400 hover:text-red-600"
                     >
                       ✕
                     </button>
@@ -546,16 +711,16 @@ export function EditPdfWorkspace() {
             className="gradient-brand w-full rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {processing
-              ? "Processing..."
+              ? dict.workspace.processing
               : annotations.length === 0
-                ? "Add text annotations first"
-                : `Apply Edits & Download (${annotations.length} annotation${annotations.length > 1 ? "s" : ""})`}
+                ? dict.workspace.addTextFirst
+                : dict.workspace.applyEdits(annotations.length)}
           </button>
 
           {processing && (
             <div className="flex items-center justify-center gap-3 text-sm text-purple-600">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-purple-200 border-t-purple-600" />
-              Applying edits...
+              {dict.workspace.applyingEdits}
             </div>
           )}
         </div>
@@ -566,7 +731,7 @@ export function EditPdfWorkspace() {
         <div className="mt-4 rounded-xl border-2 border-red-200 bg-red-50/50 p-4 text-center dark:border-red-800 dark:bg-red-950/20">
           <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
           <button onClick={handleClear} className="mt-2 text-xs font-medium text-red-600 hover:underline">
-            Try Again
+            {dict.workspace.tryAgain}
           </button>
         </div>
       )}

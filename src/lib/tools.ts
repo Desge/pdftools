@@ -81,6 +81,16 @@ export const TOOLS: ToolMeta[] = [
     icon: "🖼️",
   },
   {
+    slug: "pdf-to-image",
+    title: "PDF to Image",
+    description: "Convert PDF pages to JPG or PNG images. Choose quality and resolution.",
+    longDescription: "Convert every page of your PDF to high-quality images. Choose between JPG (adjustable quality for smaller files) or PNG (lossless, perfect for graphics). Adjust the resolution for crisp results. All processing happens locally in your browser — no upload needed.",
+    keywords: ["pdf to image", "pdf to jpg", "pdf to png", "convert pdf to image", "pdf image converter"],
+    category: "convert",
+    icon: "🖼️",
+    isNew: true,
+  },
+  {
     slug: "pdf-to-text",
     title: "PDF to Text",
     description: "Extract text content from PDF documents.",
@@ -106,6 +116,24 @@ export const TOOLS: ToolMeta[] = [
     keywords: ["excel to pdf", "xlsx to pdf", "convert excel to pdf"],
     category: "convert",
     icon: "📊",
+  },
+  {
+    slug: "pdf-to-ppt",
+    title: "PDF to PPT",
+    description: "Convert your PDF files to editable PowerPoint presentations.",
+    longDescription: "Convert PDF documents to PowerPoint (PPTX) format for easy editing and presenting. This conversion requires server-side processing and will be available in a future update.",
+    keywords: ["pdf to ppt", "pdf to powerpoint", "convert pdf to ppt", "pdf to slides"],
+    category: "convert",
+    icon: "📊",
+  },
+  {
+    slug: "pdf-to-excel",
+    title: "PDF to Excel",
+    description: "Extract data from PDF tables and convert to Excel spreadsheets.",
+    longDescription: "Convert PDF tables and data to Excel (XLSX) spreadsheets. This conversion requires server-side processing and will be available in a future update.",
+    keywords: ["pdf to excel", "pdf to xlsx", "convert pdf to excel", "extract pdf to excel"],
+    category: "convert",
+    icon: "📈",
   },
 
   // ── Edit PDF ──
@@ -153,6 +181,15 @@ export const TOOLS: ToolMeta[] = [
     keywords: ["crop pdf", "trim pdf margins", "crop pdf pages", "pdf crop tool"],
     category: "edit",
     icon: "✂️",
+  },
+  {
+    slug: "sign-pdf",
+    title: "Sign PDF",
+    description: "Add handwritten or typed signatures to your PDF documents.",
+    longDescription: "Draw, type, or upload your signature and place it on any page of your PDF. Supports drawing with mouse/touch, typing with font selection, or uploading a signature image. Position, resize, and download the signed PDF — all in your browser.",
+    keywords: ["sign pdf", "pdf signature", "add signature to pdf", "electronic signature", "digital signature"],
+    category: "edit",
+    icon: "✍️",
   },
 
   // ── PDF Security ──

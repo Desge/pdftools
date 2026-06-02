@@ -1,1 +1,9 @@
 export { ToolWorkspace } from "./tool-workspace";
+export { SplitPdfWorkspace } from "./split-pdf-workspace";
+export { RotatePdfWorkspace } from "./rotate-pdf-workspace";
+export { WatermarkPdfWorkspace } from "./watermark-pdf-workspace";
+export { ProtectPdfWorkspace } from "./protect-pdf-workspace";
+export { UnlockPdfWorkspace } from "./unlock-pdf-workspace";
+export { PdfToImage } from "./pdf-to-image";
+export { CompressPdfWorkspace } from "./compress-pdf-workspace";
+export { MergePdfWorkspace } from "./merge-pdf-workspace";

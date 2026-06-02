@@ -32,31 +32,6 @@ export async function splitPDF(buffer: ArrayBuffer): Promise<Uint8Array[]> {
   return pages;
 }
 
-/** Extract specific pages from a PDF */
-export async function extractPages(
-  buffer: ArrayBuffer,
-  pageIndices: number[]
-): Promise<Uint8Array> {
-  const source = await PDFDocument.load(buffer);
-  const doc = await PDFDocument.create();
-  const pages = await doc.copyPages(source, pageIndices);
-  pages.forEach((page) => doc.addPage(page));
-  return doc.save();
-}
-
-/** Delete pages from a PDF (removes by index, sorted descending) */
-export async function deletePages(
-  buffer: ArrayBuffer,
-  pageIndices: number[]
-): Promise<Uint8Array> {
-  const doc = await PDFDocument.load(buffer);
-  const sorted = [...pageIndices].sort((a, b) => b - a);
-  for (const idx of sorted) {
-    doc.removePage(idx);
-  }
-  return doc.save();
-}
-
 /** Rotate all pages of a PDF */
 export async function rotatePDF(
   buffer: ArrayBuffer,
@@ -109,21 +84,90 @@ export async function imagesToPDF(
 export async function addTextWatermark(
   buffer: ArrayBuffer,
   text: string,
-  opacity = 0.3
+  opacity = 0.3,
+  fontSize = 50,
+  fontFamily: "helvetica" | "times" | "courier" = "helvetica",
+  rotation = 45,
+  position: "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right" | "tile" = "center",
+  colorHex = "#808080"
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.load(buffer);
   const pages = doc.getPages();
 
+  // Embed font based on family
+  const { rgb, StandardFonts } = await import("pdf-lib");
+  let font;
+  if (fontFamily === "times") {
+    font = await doc.embedFont(StandardFonts.TimesRoman);
+  } else if (fontFamily === "courier") {
+    font = await doc.embedFont(StandardFonts.Courier);
+  } else {
+    font = await doc.embedFont(StandardFonts.Helvetica);
+  }
+
+  // Parse hex color
+  const r = parseInt(colorHex.slice(1, 3), 16) / 255;
+  const g = parseInt(colorHex.slice(3, 5), 16) / 255;
+  const b = parseInt(colorHex.slice(5, 7), 16) / 255;
+
   for (const page of pages) {
     const { width, height } = page.getSize();
-    page.drawText(text, {
-      x: width / 2 - 100,
-      y: height / 2,
-      size: 50,
-      opacity,
-      rotate: degrees(45),
-      color: rgb(0.5, 0.5, 0.5),
-    });
+    const textWidth = font.widthOfTextAtSize(text, fontSize);
+
+    if (position === "tile") {
+      // Tile watermark across page
+      const spacingX = textWidth + 60;
+      const spacingY = fontSize * 3;
+      for (let x = 0; x < width; x += spacingX) {
+        for (let y = 0; y < height; y += spacingY) {
+          page.drawText(text, {
+            x,
+            y,
+            size: fontSize,
+            font,
+            opacity,
+            rotate: degrees(rotation),
+            color: rgb(r, g, b),
+          });
+        }
+      }
+    } else {
+      // Single position
+      let x: number, y: number;
+      switch (position) {
+        case "top-left":
+          x = 40;
+          y = height - 60;
+          break;
+        case "top-right":
+          x = width - textWidth - 40;
+          y = height - 60;
+          break;
+        case "bottom-left":
+          x = 40;
+          y = 40;
+          break;
+        case "bottom-right":
+          x = width - textWidth - 40;
+          y = 40;
+          break;
+        case "center":
+        default:
+          x = width / 2 - textWidth / 2;
+          y = height / 2;
+          break;
+      }
+
+      page.drawText(text, {
+        x,
+        y,
+        size: fontSize,
+        font,
+        opacity,
+        rotate: degrees(rotation),
+        color: rgb(r, g, b),
+      });
+    }
   }
 
   return doc.save();
@@ -153,38 +197,79 @@ export async function addPageNumbers(
   return doc.save();
 }
 
-/** Read PDF metadata */
-export async function readMetadata(buffer: ArrayBuffer) {
-  const doc = await PDFDocument.load(buffer);
-  return {
-    title: doc.getTitle(),
-    author: doc.getAuthor(),
-    subject: doc.getSubject(),
-    keywords: doc.getKeywords(),
-    creator: doc.getCreator(),
-    producer: doc.getProducer(),
-    pageCount: doc.getPageCount(),
-  };
+// ─── Advanced Split Functions ───
+
+/** Split PDF by ranges (e.g., "1-3,4-6,7-10") — each range becomes a separate PDF */
+export async function splitPDFByRange(
+  buffer: ArrayBuffer,
+  ranges: { start: number; end: number }[]
+): Promise<Uint8Array[]> {
+  const source = await PDFDocument.load(buffer);
+  const totalPages = source.getPageCount();
+  const result: Uint8Array[] = [];
+
+  for (const range of ranges) {
+    if (range.start < 1 || range.end > totalPages || range.start > range.end) {
+      throw new Error(
+        `Invalid range: ${range.start}-${range.end}. PDF has ${totalPages} pages.`
+      );
+    }
+    const doc = await PDFDocument.create();
+    const indices: number[] = [];
+    for (let i = range.start - 1; i < range.end; i++) {
+      indices.push(i);
+    }
+    const pages = await doc.copyPages(source, indices);
+    pages.forEach((page) => doc.addPage(page));
+    result.push(await doc.save());
+  }
+
+  return result;
 }
 
-/** Set PDF metadata */
-export async function setMetadata(
+/** Extract specific pages by number into a single PDF */
+export async function extractPDFPages(
   buffer: ArrayBuffer,
-  meta: {
-    title?: string;
-    author?: string;
-    subject?: string;
-    keywords?: string[];
-    creator?: string;
-  }
+  pageNumbers: number[]
 ): Promise<Uint8Array> {
-  const doc = await PDFDocument.load(buffer);
+  const source = await PDFDocument.load(buffer);
+  const totalPages = source.getPageCount();
+  const doc = await PDFDocument.create();
 
-  if (meta.title) doc.setTitle(meta.title);
-  if (meta.author) doc.setAuthor(meta.author);
-  if (meta.subject) doc.setSubject(meta.subject);
-  if (meta.keywords) doc.setKeywords(meta.keywords);
-  if (meta.creator) doc.setCreator(meta.creator);
+  const validIndices = pageNumbers
+    .filter((p) => p >= 1 && p <= totalPages)
+    .map((p) => p - 1);
 
+  if (validIndices.length === 0) {
+    throw new Error(`No valid page numbers. PDF has ${totalPages} pages.`);
+  }
+
+  const pages = await doc.copyPages(source, validIndices);
+  pages.forEach((page) => doc.addPage(page));
   return doc.save();
+}
+
+/** Split a PDF into chunks of N pages each */
+export async function splitPDFEveryN(
+  buffer: ArrayBuffer,
+  n: number
+): Promise<Uint8Array[]> {
+  if (n < 1) throw new Error("N must be at least 1.");
+  const source = await PDFDocument.load(buffer);
+  const totalPages = source.getPageCount();
+  const result: Uint8Array[] = [];
+
+  for (let start = 0; start < totalPages; start += n) {
+    const end = Math.min(start + n, totalPages);
+    const doc = await PDFDocument.create();
+    const indices: number[] = [];
+    for (let i = start; i < end; i++) {
+      indices.push(i);
+    }
+    const pages = await doc.copyPages(source, indices);
+    pages.forEach((page) => doc.addPage(page));
+    result.push(await doc.save());
+  }
+
+  return result;
 }

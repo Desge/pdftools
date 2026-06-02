@@ -5,13 +5,8 @@
 import {
   mergePDFs,
   splitPDF,
-  extractPages,
-  rotatePDF,
   imagesToPDF,
-  addTextWatermark,
   addPageNumbers,
-  readMetadata,
-  setMetadata,
 } from "./pdf-utils";
 import {
   compressPDF,
@@ -21,6 +16,7 @@ import {
   downloadBlob,
   downloadDataUrl,
 } from "./pdf-render";
+import { createZipAndDownload } from "./zip-utils";
 
 // ─── Result type ───
 export interface ProcessResult {
@@ -39,7 +35,8 @@ export interface ProcessResult {
 // ─── Processor type ───
 export type ToolProcessor = (
   files: File[],
-  onProgress?: (msg: string) => void
+  onProgress?: (msg: string) => void,
+  onProgressPercent?: (percent: number) => void
 ) => Promise<ProcessResult>;
 
 // ─── Helpers ───
@@ -50,12 +47,15 @@ async function filesToBuffers(files: File[]): Promise<ArrayBuffer[]> {
 // ─── Processors ───
 
 /** Merge PDF — combines multiple PDFs into one */
-const mergeProcessor: ToolProcessor = async (files, onProgress) => {
+const mergeProcessor: ToolProcessor = async (files, onProgress, onProgressPercent) => {
   if (files.length < 2) throw new Error("Please select at least 2 PDF files to merge.");
   onProgress?.(`Loading ${files.length} files...`);
+  onProgressPercent?.(10);
   const buffers = await filesToBuffers(files);
   onProgress?.("Merging PDFs...");
+  onProgressPercent?.(50);
   const result = await mergePDFs(buffers);
+  onProgressPercent?.(100);
   return {
     message: `Successfully merged ${files.length} PDF files into one.`,
     data: result,
@@ -64,12 +64,15 @@ const mergeProcessor: ToolProcessor = async (files, onProgress) => {
 };
 
 /** Split PDF — produces one file per page */
-const splitProcessor: ToolProcessor = async (files, onProgress) => {
+const splitProcessor: ToolProcessor = async (files, onProgress, onProgressPercent) => {
   if (files.length !== 1) throw new Error("Please select exactly 1 PDF file to split.");
   onProgress?.("Loading PDF...");
+  onProgressPercent?.(20);
   const buffer = await files[0].arrayBuffer();
   onProgress?.("Splitting pages...");
+  onProgressPercent?.(50);
   const pages = await splitPDF(buffer);
+  onProgressPercent?.(100);
   const baseName = files[0].name.replace(/\.pdf$/i, "");
   return {
     message: `Split into ${pages.length} individual pages.`,
@@ -82,13 +85,16 @@ const splitProcessor: ToolProcessor = async (files, onProgress) => {
 };
 
 /** Compress PDF — re-renders pages at lower quality */
-const compressProcessor: ToolProcessor = async (files, onProgress) => {
+const compressProcessor: ToolProcessor = async (files, onProgress, onProgressPercent) => {
   if (files.length !== 1) throw new Error("Please select exactly 1 PDF file to compress.");
   onProgress?.("Loading PDF...");
+  onProgressPercent?.(10);
   const buffer = await files[0].arrayBuffer();
   const origSize = buffer.byteLength;
   onProgress?.("Compressing (this may take a moment for large files)...");
+  onProgressPercent?.(40);
   const result = await compressPDF(buffer, { quality: 0.45, format: "image/jpeg" });
+  onProgressPercent?.(100);
   const newSize = result.byteLength;
   const reduction = ((1 - newSize / origSize) * 100).toFixed(1);
   const baseName = files[0].name.replace(/\.pdf$/i, "");
@@ -100,12 +106,15 @@ const compressProcessor: ToolProcessor = async (files, onProgress) => {
 };
 
 /** PDF to JPG — renders each page as a JPEG */
-const pdfToJpgProcessor: ToolProcessor = async (files, onProgress) => {
+const pdfToJpgProcessor: ToolProcessor = async (files, onProgress, onProgressPercent) => {
   if (files.length !== 1) throw new Error("Please select exactly 1 PDF file to convert.");
   onProgress?.("Loading PDF...");
+  onProgressPercent?.(15);
   const buffer = await files[0].arrayBuffer();
   onProgress?.("Converting to JPG...");
+  onProgressPercent?.(40);
   const results = await pdfToJPG(buffer, { scale: 2.0, quality: 0.9 });
+  onProgressPercent?.(100);
   const baseName = files[0].name.replace(/\.pdf$/i, "");
 
   if (results.length === 1) {
@@ -132,12 +141,15 @@ const pdfToJpgProcessor: ToolProcessor = async (files, onProgress) => {
 };
 
 /** PDF to PNG */
-const pdfToPngProcessor: ToolProcessor = async (files, onProgress) => {
+const pdfToPngProcessor: ToolProcessor = async (files, onProgress, onProgressPercent) => {
   if (files.length !== 1) throw new Error("Please select exactly 1 PDF file to convert.");
   onProgress?.("Loading PDF...");
+  onProgressPercent?.(15);
   const buffer = await files[0].arrayBuffer();
   onProgress?.("Converting to PNG...");
+  onProgressPercent?.(40);
   const results = await pdfToPNG(buffer, { scale: 2.0 });
+  onProgressPercent?.(100);
   const baseName = files[0].name.replace(/\.pdf$/i, "");
 
   if (results.length === 1) {
@@ -163,12 +175,15 @@ const pdfToPngProcessor: ToolProcessor = async (files, onProgress) => {
 };
 
 /** JPG/PNG to PDF */
-const imagesToPdfProcessor: ToolProcessor = async (files, onProgress) => {
+const imagesToPdfProcessor: ToolProcessor = async (files, onProgress, onProgressPercent) => {
   if (files.length === 0) throw new Error("Please select at least 1 image file.");
   onProgress?.(`Loading ${files.length} images...`);
+  onProgressPercent?.(15);
   const buffers = await filesToBuffers(files);
   onProgress?.("Converting to PDF...");
+  onProgressPercent?.(60);
   const result = await imagesToPDF(buffers, true);
+  onProgressPercent?.(100);
   return {
     message: `Converted ${files.length} image(s) to a single PDF.`,
     data: result,
@@ -176,43 +191,16 @@ const imagesToPdfProcessor: ToolProcessor = async (files, onProgress) => {
   };
 };
 
-/** Rotate PDF */
-const rotateProcessor: ToolProcessor = async (files, onProgress) => {
-  if (files.length !== 1) throw new Error("Please select exactly 1 PDF file to rotate.");
-  onProgress?.("Loading PDF...");
-  const buffer = await files[0].arrayBuffer();
-  onProgress?.("Rotating 90°...");
-  const result = await rotatePDF(buffer, 90);
-  const baseName = files[0].name.replace(/\.pdf$/i, "");
-  return {
-    message: "Rotated all pages by 90°.",
-    data: result,
-    filename: `${baseName}_rotated.pdf`,
-  };
-};
-
-/** Watermark PDF */
-const watermarkProcessor: ToolProcessor = async (files, onProgress) => {
-  if (files.length !== 1) throw new Error("Please select exactly 1 PDF file to watermark.");
-  onProgress?.("Loading PDF...");
-  const buffer = await files[0].arrayBuffer();
-  onProgress?.("Adding watermark...");
-  const result = await addTextWatermark(buffer, "CONFIDENTIAL", 0.15);
-  const baseName = files[0].name.replace(/\.pdf$/i, "");
-  return {
-    message: "Watermark added.",
-    data: result,
-    filename: `${baseName}_watermarked.pdf`,
-  };
-};
-
 /** Add page numbers */
-const pageNumbersProcessor: ToolProcessor = async (files, onProgress) => {
+const pageNumbersProcessor: ToolProcessor = async (files, onProgress, onProgressPercent) => {
   if (files.length !== 1) throw new Error("Please select exactly 1 PDF file.");
   onProgress?.("Loading PDF...");
+  onProgressPercent?.(20);
   const buffer = await files[0].arrayBuffer();
   onProgress?.("Adding page numbers...");
+  onProgressPercent?.(50);
   const result = await addPageNumbers(buffer);
+  onProgressPercent?.(100);
   const baseName = files[0].name.replace(/\.pdf$/i, "");
   return {
     message: "Page numbers added.",
@@ -222,11 +210,13 @@ const pageNumbersProcessor: ToolProcessor = async (files, onProgress) => {
 };
 
 /** PDF to Text */
-const pdfToTextProcessor: ToolProcessor = async (files, onProgress) => {
+const pdfToTextProcessor: ToolProcessor = async (files, onProgress, onProgressPercent) => {
   if (files.length !== 1) throw new Error("Please select exactly 1 PDF file.");
   onProgress?.("Extracting text...");
+  onProgressPercent?.(30);
   const buffer = await files[0].arrayBuffer();
   const text = await extractText(buffer);
+  onProgressPercent?.(100);
   const baseName = files[0].name.replace(/\.pdf$/i, "");
   const encoder = new TextEncoder();
   return {
@@ -234,57 +224,6 @@ const pdfToTextProcessor: ToolProcessor = async (files, onProgress) => {
     data: encoder.encode(text),
     filename: `${baseName}.txt`,
   };
-};
-
-/** Protect PDF — add password encryption */
-const protectProcessor: ToolProcessor = async (files, onProgress) => {
-  if (files.length !== 1) throw new Error("Please select exactly 1 PDF file to protect.");
-  onProgress?.("Loading PDF...");
-  const buffer = await files[0].arrayBuffer();
-  onProgress?.("Encrypting...");
-  const { PDFDocument } = await import("pdf-lib");
-  const doc = await PDFDocument.load(buffer);
-  onProgress?.("Encrypting...");
-  const password = prompt("Enter a password to protect this PDF:") || "default123";
-  (doc as any).encrypt({
-    userPassword: password,
-    ownerPassword: password + "_owner",
-    permissions: { printing: "highResolution", modifying: false, copying: true },
-  } as any);
-  const result = await doc.save();
-  const baseName = files[0].name.replace(/\.pdf$/i, "");
-  return {
-    message: `PDF protected with password.`,
-    data: result,
-    filename: `${baseName}_protected.pdf`,
-  };
-};
-
-/** Unlock PDF — remove password (requires knowing the password) */
-const unlockProcessor: ToolProcessor = async (files, onProgress) => {
-  if (files.length !== 1) throw new Error("Please select exactly 1 PDF file to unlock.");
-  onProgress?.("Loading PDF...");
-  const buffer = await files[0].arrayBuffer();
-  const { PDFDocument } = await import("pdf-lib");
-  const password = prompt("Enter the PDF password:") || "";
-  try {
-    const doc = await (PDFDocument as any).load(buffer, { password });
-    // pdf-lib doesn't have a "remove encryption" API directly.
-    // Workaround: copy pages to a new unencrypted document.
-    const newDoc = await PDFDocument.create();
-    const indices = doc.getPageIndices();
-    const pages = await newDoc.copyPages(doc, indices);
-    pages.forEach((p) => newDoc.addPage(p));
-    const result = await newDoc.save();
-    const baseName = files[0].name.replace(/\.pdf$/i, "");
-    return {
-      message: "PDF unlocked successfully.",
-      data: result,
-      filename: `${baseName}_unlocked.pdf`,
-    };
-  } catch {
-    throw new Error("Incorrect password or the PDF could not be unlocked.");
-  }
 };
 
 // ─── Processor Registry ───
@@ -295,12 +234,8 @@ export const TOOL_PROCESSORS: Record<string, ToolProcessor> = {
   "pdf-to-jpg": pdfToJpgProcessor,
   "pdf-to-png": pdfToPngProcessor,
   "jpg-to-pdf": imagesToPdfProcessor,
-  "rotate-pdf": rotateProcessor,
-  "watermark-pdf": watermarkProcessor,
   "page-numbers": pageNumbersProcessor,
   "pdf-to-text": pdfToTextProcessor,
-  "protect-pdf": protectProcessor,
-  "unlock-pdf": unlockProcessor,
 };
 
 // ─── Lazy processors (imported on-demand to avoid SSR deps) ───
@@ -310,11 +245,7 @@ const lazyProcessors: Record<string, () => Promise<ToolProcessor>> = {
   "html-to-pdf": async () => (await import("./office-processors")).htmlToPdfProcessor,
   "markdown-to-pdf": async () => (await import("./office-processors")).markdownToPdfProcessor,
   "heic-to-pdf": async () => (await import("./office-processors")).heicToPdfProcessor,
-  "edit-pdf": async () => (await import("./advanced-processors")).editPdfProcessor,
-  "organize-pdf": async () => (await import("./advanced-processors")).organizePdfProcessor,
-  "crop-pdf": async () => (await import("./advanced-processors")).cropPdfProcessor,
   "ocr-pdf": async () => (await import("./advanced-processors")).ocrPdfProcessor,
-  "epub-to-pdf": async () => (await import("./office-processors")).epubToPdfProcessor,
   "pdf-to-word": async () => (await import("./office-processors")).pdfToWordProcessor,
 };
 
@@ -327,15 +258,16 @@ export function hasProcessor(slug: string): boolean {
 export async function runToolProcessor(
   slug: string,
   files: File[],
-  onProgress?: (msg: string) => void
+  onProgress?: (msg: string) => void,
+  onProgressPercent?: (percent: number) => void
 ): Promise<ProcessResult> {
   const processor = TOOL_PROCESSORS[slug];
-  if (processor) return processor(files, onProgress);
+  if (processor) return processor(files, onProgress, onProgressPercent);
 
   const lazyLoader = lazyProcessors[slug];
   if (lazyLoader) {
     const p = await lazyLoader();
-    return p(files, onProgress);
+    return p(files, onProgress, onProgressPercent);
   }
 
   throw new Error(`Tool "${slug}" is not yet implemented. Stay tuned!`);
@@ -357,9 +289,8 @@ export function downloadResult(result: ProcessResult): void {
     return;
   }
   if (result.files && result.files.length > 1) {
-    // For multiple files, download each with a short delay
-    result.files.forEach((f, i) => {
-      setTimeout(() => downloadBlob(f.data, f.name, f.mime), i * 200);
-    });
+    // Bundle into ZIP for multi-file downloads
+    const baseName = result.filename?.replace(/\.zip$/i, "") || "download";
+    createZipAndDownload(result.files, `${baseName}.zip`);
   }
 }
