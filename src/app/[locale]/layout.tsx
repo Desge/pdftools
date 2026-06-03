@@ -52,8 +52,10 @@ export default async function LocaleLayout({
   const dict = t(lang as any);
 
   return (
-    <html lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} className="h-full antialiased">
+    <html lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} className="h-full antialiased" suppressHydrationWarning>
       <head>
+        {/* Prevent FOUC — apply dark class before paint */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()` }} />
         {/* PWA — manifest */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#7c3aed" />
