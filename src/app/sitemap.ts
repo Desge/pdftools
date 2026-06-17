@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { VISIBLE_TOOLS } from "@/lib/tools";
 import { ALL_CONVERSIONS } from "@/lib/formats";
 import { SUPPORTED_LOCALES } from "@/lib/i18n";
-import { GUIDES } from "@/lib/guides";
+import { GUIDES, getGuideLocales, hasGuideLocale } from "@/lib/guides";
 
 const SITE_URL = "https://pdf.toolconv.com";
 export const dynamic = "force-static";
@@ -110,6 +110,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     // Guide pages
     for (const guide of GUIDES) {
+      if (!hasGuideLocale(guide, locale)) continue;
+      const guideLocales = getGuideLocales(guide);
       entries.push({
         url: `${SITE_URL}${prefix}/guides/${guide.slug}`,
         lastModified: new Date(),
@@ -117,8 +119,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: 0.8,
         alternates: {
           languages: {
-            "x-default": `${SITE_URL}/guides/${guide.slug}`,
-            ...Object.fromEntries(SUPPORTED_LOCALES.map((l) => [l, `${SITE_URL}/${l}/guides/${guide.slug}`])),
+            "x-default": `${SITE_URL}/en/guides/${guide.slug}`,
+            ...Object.fromEntries(guideLocales.map((l) => [l, `${SITE_URL}/${l}/guides/${guide.slug}`])),
           },
         },
       });

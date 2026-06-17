@@ -51,6 +51,9 @@ const SUPPORTED = [
 
 function detectLocale(): string {
   if (typeof window === "undefined") return "en";
+  // 0. 共享 cookie（跨子域语言偏好）— 最高优先级
+  const cookieMatch = document.cookie.match('(^|;)\\s*toolconv_lang\\s*=\\s*([^;]+)');
+  if (cookieMatch && SUPPORTED.includes(cookieMatch[2])) return cookieMatch[2];
   // 1. localStorage preference
   const saved = localStorage.getItem("locale");
   if (saved && SUPPORTED.includes(saved)) return saved;

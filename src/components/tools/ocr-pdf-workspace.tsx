@@ -257,7 +257,7 @@ export function OcrPdfWorkspace() {
             </div>
             {outputFormat === "pdf-with-text-layer" && (
               <p className="mt-2 text-[11px] text-gray-400">
-                <em>Currently outputs plain text. PDF with text layer coming soon.</em>
+                <em>This browser-based OCR tool currently exports recognized text only. PDF text-layer export is not available in this version.</em>
               </p>
             )}
           </div>

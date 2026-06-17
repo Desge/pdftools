@@ -54,6 +54,8 @@ export default async function LocaleLayout({
   return (
     <html lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} className="h-full antialiased" suppressHydrationWarning>
       <head>
+        {/* Language redirect — check shared cookie before paint */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var m=document.cookie.match('(^|;)\\s*toolconv_lang\\s*=\\s*([^;]+)');if(m){var L=m[2],p=window.location.pathname.split('/'),u=p[1],v=['en','zh','ja','ko','es','fr','de','pt','ru','ar','hi','it'];if(v.includes(L)&&L!==u){p[1]=L;window.location.replace(p.join('/')+window.location.search)}}})()` }} />
         {/* Prevent FOUC — apply dark class before paint */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()` }} />
         {/* PWA — manifest */}

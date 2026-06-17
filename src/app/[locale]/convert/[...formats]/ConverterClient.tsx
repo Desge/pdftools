@@ -146,7 +146,7 @@ export function ConverterClient({ pair, locale: localeProp }: ConverterClientPro
   const isImplemented = hasProcessor(pair.slug);
   const showConverter = pair.clientSide && pair.quality >= 3;
 
-  // ─── Coming Soon state ───
+  // ─── Unsupported conversion state ───
   if (!showConverter) {
     return (
       <div className="rounded-2xl border-2 border-dashed border-yellow-300 bg-yellow-50 p-12 text-center dark:border-yellow-800 dark:bg-yellow-950/20">

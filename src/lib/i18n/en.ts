@@ -158,12 +158,12 @@ const dict: LangDict = {
     "pdf-to-ppt": {
       title: "PDF to PPT",
       description: "Convert your PDF files to editable PowerPoint presentations.",
-      longDescription: "Convert PDF documents to PowerPoint (PPTX) format for easy editing and presenting. This conversion requires server-side processing and will be available in a future update."
+      longDescription: "Convert PDF documents to PowerPoint (PPTX) format for easy editing and presenting. This conversion requires server-side processing and is not available in the free browser version."
 },
     "pdf-to-excel": {
       title: "PDF to Excel",
       description: "Extract data from PDF tables and convert to Excel spreadsheets.",
-      longDescription: "Convert PDF tables and data to Excel (XLSX) spreadsheets. This conversion requires server-side processing and will be available in a future update."
+      longDescription: "Convert PDF tables and data to Excel (XLSX) spreadsheets. This conversion requires server-side processing and is not available in the free browser version."
 }
 },
   toolPage: {
@@ -197,9 +197,9 @@ const dict: LangDict = {
     clear: "Clear",
     processFiles: "Process Files",
     previewOnly: "Try (Preview)",
-    previewWarning: "⚠️ This tool is in preview mode. Full implementation coming soon.",
+    previewWarning: "Preview mode. Some actions may be limited in this browser-based version.",
     selectHint: "Select files above to get started.",
-    comingSoon: "🚧 This tool implementation is coming soon. The file handling infrastructure is ready.",
+    comingSoon: "This tool is not available in this browser version. Choose an available PDF tool from the tools list.",
     pages: "pages",
     mb: "MB",
     kb: "KB",
@@ -417,8 +417,8 @@ const dict: LangDict = {
     subtitle: (from, to) => `Convert ${from} (${from.toUpperCase()}) files to ${to} (${to.toUpperCase()}) format online, free, and`,
     browserBased: "Browser-based",
     experimental: "Experimental",
-    comingSoon: "⚠️ Coming Soon",
-    comingSoonDesc: "This conversion type requires server-side processing and will be available in a future update. Stay tuned!",
+    comingSoon: "Unsupported conversion",
+    comingSoonDesc: "This conversion type requires server-side processing and is not available in this browser version.",
     about: (from, to) => `About ${from} and ${to}`,
     category: "Category",
     mime: "MIME",
@@ -499,9 +499,9 @@ pages: {
     freeFeature2: "No sign-up or registration required",
     freeFeature3: "No file size limits",
     freeFeature4: "100% browser-based — no upload, no servers",
-    proTier: "Pro (Coming Soon)",
-    proDesc: "Advanced features for power users who need more. Stay tuned!",
-    ocrNote: "OCR (Optical Character Recognition) will be available as a Pro feature. Convert scanned PDFs into searchable text with server-grade accuracy.",
+    proTier: "Pro",
+    proDesc: "Advanced features for power users are not part of the free browser version.",
+    ocrNote: "OCR (Optical Character Recognition) requires server-grade processing and is not included in the free browser version.",
     faqQ1: "Why are the tools free?",
     faqA1: "We believe essential PDF tools should be accessible to everyone. Our browser-based approach keeps costs low since files never leave your device. This allows us to offer all tools completely free, supported by minimal advertising.",
     faqQ2: "What happens when Pro launches?",

@@ -67,8 +67,8 @@ export function Footer({
           {/* Cross-site links */}
           <div className="mb-6 flex flex-wrap items-center justify-center gap-4 text-sm">
             <span className="font-semibold text-gray-700 dark:text-gray-300">{dict.footer.alsoTry}</span>
-            <a href="https://image.toolconv.com" className="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-medium">{dict.footer.imageTools}</a>
-            <a href="https://unit.toolconv.com" className="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-medium">{dict.footer.unitConverter}</a>
+            <a href={`https://image.toolconv.com/${safeLocale}/`} className="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-medium">{dict.footer.imageTools}</a>
+            <a href={`https://unit.toolconv.com/${safeLocale}/`} className="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-medium">{dict.footer.unitConverter}</a>
           </div>
           <p className="text-center text-xs text-gray-500">
             &copy; {new Date().getFullYear()} toolconv. {dict.footer.copyright}

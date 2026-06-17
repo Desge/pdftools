@@ -10,7 +10,7 @@ export interface GuideContent {
 
 export interface GuideEntry {
   slug: string;
-  icon: string;
+  label: string;
   content: Record<string, GuideContent>;
 }
 
@@ -20,7 +20,7 @@ export const GUIDES: GuideEntry[] = [
   // ──────────────────────────────────────────
   {
     slug: "how-to-merge-pdf",
-    icon: "🔗",
+    label: "MERGE",
     content: {
       en: {
         title: "How to Merge PDF Files: Combine Documents Effortlessly",
@@ -174,7 +174,7 @@ export const GUIDES: GuideEntry[] = [
   // ──────────────────────────────────────────
   {
     slug: "how-to-compress-pdf",
-    icon: "📦",
+    label: "SIZE",
     content: {
       en: {
         title: "How to Compress PDF Files: Reduce Size Without Losing Quality",
@@ -328,7 +328,7 @@ export const GUIDES: GuideEntry[] = [
   // ──────────────────────────────────────────
   {
     slug: "how-to-split-pdf",
-    icon: "✂️",
+    label: "SPLIT",
     content: {
       en: {
         title: "How to Split PDF Files: Separate Pages Easily",
@@ -476,9 +476,107 @@ export const GUIDES: GuideEntry[] = [
       },
     },
   },
+  {
+    slug: "how-to-merge-pdf-without-uploading",
+    label: "PRIV",
+    content: {
+      en: {
+        title: "How to Merge PDF Files Without Uploading Them",
+        description: "A privacy-focused workflow for combining contracts, reports, scans, and invoices entirely in your browser.",
+        keywords: ["merge PDF without uploading", "private PDF merger", "browser PDF merge", "secure PDF tools"],
+        paragraphs: [
+          "PDF merging often involves sensitive documents: contracts, invoices, HR files, bank statements, or unpublished client work. A browser-based merger is useful because it can combine files locally without transferring the originals to a remote conversion server.",
+          "Start by preparing the source PDFs on your device. Rename files in the order you expect to combine them, such as 01-cover.pdf, 02-contract.pdf, and 03-appendix.pdf. This makes it easier to verify the final order before exporting.",
+          "Open the merge tool, add the PDFs, then drag them into the correct order. If the tool supports page previews, scan the first and last page of each file before merging so you do not accidentally place an appendix before the main document.",
+          "After downloading the merged PDF, open it locally and check page count, bookmarks, page orientation, and file size. For legal or client-facing documents, keep a copy of the original source PDFs so you can rebuild the combined file if a page needs to change.",
+          "Local processing protects file contents, but it does not replace document hygiene. Remove hidden metadata when necessary, avoid public computers for confidential files, and do not share the finished PDF through untrusted links.",
+        ],
+      },
+    },
+  },
+  {
+    slug: "how-to-reduce-pdf-size-for-email",
+    label: "EMAIL",
+    content: {
+      en: {
+        title: "How to Reduce PDF File Size for Email",
+        description: "Practical PDF compression settings for Gmail, Outlook, application portals, and client attachments.",
+        keywords: ["reduce PDF size for email", "email PDF attachment limit", "compress PDF for Gmail", "small PDF file"],
+        paragraphs: [
+          "Email services and application portals often reject attachments over 10-25 MB. Reducing a PDF for email is mostly about optimizing images, removing unnecessary data, and choosing a file size that stays comfortably below the limit.",
+          "If your PDF contains scanned pages or photos, image compression will usually save the most space. A scanned document at 300 DPI may look good for printing, but 150-200 DPI is often enough for reading on screens and sending by email.",
+          "Use balanced compression first. Maximum compression can make signatures, stamps, charts, and small text harder to read. If the file is still too large, reduce page image resolution before lowering quality too aggressively.",
+          "Check the final PDF before sending. Open it at 100 percent zoom, inspect pages with small text, and confirm that important visual details such as seals, screenshots, and diagrams remain legible.",
+          "For very large files, split the PDF into logical sections instead of forcing harsh compression. Sending a contract and appendices as separate attachments can preserve quality while staying under size limits.",
+        ],
+      },
+    },
+  },
+  {
+    slug: "pdf-to-jpg-vs-pdf-to-png",
+    label: "IMG",
+    content: {
+      en: {
+        title: "PDF to JPG vs PDF to PNG: Which Format Should You Choose?",
+        description: "Compare JPG and PNG exports for PDF pages, including file size, screenshots, text clarity, transparency, and sharing.",
+        keywords: ["PDF to JPG vs PNG", "convert PDF pages to images", "PDF image export", "JPG or PNG for PDF"],
+        paragraphs: [
+          "Exporting PDF pages as images is useful for previews, thumbnails, social posts, documentation, and systems that do not accept PDF uploads. The main choice is usually JPG or PNG, and the right answer depends on what the page contains.",
+          "Choose JPG for photo-heavy pages, presentation slides, scanned documents, and preview images where file size matters. JPG compression keeps files small, which is helpful for web pages, emails, and content management systems.",
+          "Choose PNG for pages with sharp text, interface screenshots, charts, line art, or transparent elements. PNG is often larger, but it preserves crisp edges and avoids compression artifacts around small labels.",
+          "If you are exporting a document page for reading, test both formats at the same width. JPG may blur small text at low quality, while PNG may be unnecessarily heavy for photographic pages.",
+          "For website thumbnails, export a JPG or WebP preview and link to the original PDF for full detail. For instructional screenshots where text must stay readable, PNG is usually safer.",
+        ],
+      },
+    },
+  },
+  {
+    slug: "organize-pdf-before-sending-contract",
+    label: "DOC",
+    content: {
+      en: {
+        title: "How to Organize PDF Pages Before Sending a Contract",
+        description: "A practical checklist for reordering, rotating, deleting, and verifying PDF pages before client or legal delivery.",
+        keywords: ["organize PDF pages", "prepare contract PDF", "reorder PDF pages", "PDF contract checklist"],
+        paragraphs: [
+          "Contracts often collect pages from multiple sources: cover letters, signature pages, exhibits, scanned IDs, and appendices. Organizing the PDF before sending it helps prevent confusion and reduces the risk of missing or duplicated pages.",
+          "Start with page order. Put the main agreement first, followed by signature pages, schedules, exhibits, and supporting documents. If your recipient expects a specific order, mirror their checklist exactly.",
+          "Rotate scanned pages so every page reads in the same direction. Mixed orientation is common when pages are scanned from different devices, and it can make signing or reviewing the contract frustrating.",
+          "Remove blank pages, duplicate scans, internal notes, and draft pages. Then check page numbers and references inside the contract. If an exhibit is referenced as Exhibit B, make sure it appears in the merged PDF with the same label.",
+          "Before delivery, open the final PDF in a separate viewer and scan the document from beginning to end. Confirm the file name, page count, visible signatures, and attachment size before sending.",
+        ],
+      },
+    },
+  },
+  {
+    slug: "why-pdf-to-word-loses-formatting",
+    label: "WORD",
+    content: {
+      en: {
+        title: "Why Some PDF to Word Conversions Lose Formatting",
+        description: "Understand why fonts, columns, tables, headers, and scanned pages can break when converting PDF files to Word.",
+        keywords: ["PDF to Word loses formatting", "PDF conversion formatting", "convert PDF to DOCX", "PDF layout problems"],
+        paragraphs: [
+          "PDF and Word are built for different jobs. A PDF preserves a fixed visual page, while Word stores editable document structure. When a converter turns PDF pages into Word content, it has to guess which text belongs to paragraphs, tables, columns, headers, and footnotes.",
+          "Fonts are a common source of mismatch. If the original PDF uses embedded or custom fonts that are not available in Word, the converted document may substitute another font and change line breaks or page spacing.",
+          "Tables and multi-column layouts are also difficult. A PDF may position every word independently on the page, while Word expects rows, cells, and flowable paragraphs. Complex invoices, brochures, and academic papers can therefore need manual cleanup.",
+          "Scanned PDFs add another layer. They are images of text, not real selectable text, unless OCR has been applied. OCR can recognize characters, but it may still struggle with stamps, handwriting, skewed pages, or low-resolution scans.",
+          "For best results, start with a clean digital PDF, avoid heavy compression before conversion, and check whether you actually need editable Word output. If the goal is review or signing, keeping the PDF format may preserve the document more reliably.",
+        ],
+      },
+    },
+  },
 ];
 
 /** Find a guide by its slug */
 export function getGuide(slug: string): GuideEntry | undefined {
   return GUIDES.find((g) => g.slug === slug);
+}
+
+export function hasGuideLocale(guide: GuideEntry, locale: string): boolean {
+  return Boolean(guide.content[locale]);
+}
+
+export function getGuideLocales(guide: GuideEntry): string[] {
+  return Object.keys(guide.content);
 }

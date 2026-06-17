@@ -7,6 +7,7 @@ import { ToolCard } from "@/components/ui/tool-card";
 import { ToolWorkspaceLoader } from "@/components/tools/tool-workspace-loader";
 import { t, SUPPORTED_LOCALES } from "@/lib/i18n";
 import { AdBanner } from "@/components/ads/AdBanner";
+import { getPdfToolGuideContent } from "@/lib/tool-content";
 
 // ─── generateStaticParams for SSG (all locales × all tools) ───
 export function generateStaticParams() {
@@ -94,7 +95,8 @@ export default async function ToolPage({
   const dict = t(locale);
   const tTitle = dict.toolItems[slug]?.title || tool.title;
   const tLongDesc = dict.toolItems[slug]?.longDescription || tool.longDescription;
-  const faqs = getFAQs(tool, dict);
+  const guide = getPdfToolGuideContent(tool);
+  const faqs = [...guide.faqs, ...getFAQs(tool, dict)];
   const related = VISIBLE_TOOLS.filter((t) => t.category === tool.category && t.slug !== tool.slug).slice(0, 4);
   const prefix = `/${locale}`;
 
@@ -107,11 +109,7 @@ export default async function ToolPage({
         { name: tTitle, url: `${prefix}/tools/${tool.slug}/` },
       ]),
       faqJsonLd(faqs),
-      howToJsonLd(tTitle, [
-        { name: dict.toolPage.step1Title, text: dict.toolPage.step1Desc },
-        { name: dict.toolPage.step2Title, text: dict.toolPage.step2Desc },
-        { name: dict.toolPage.step3Title, text: dict.toolPage.step3Desc },
-      ]),
+      howToJsonLd(tTitle, guide.steps),
     ],
   };
 
@@ -149,20 +147,47 @@ export default async function ToolPage({
         <AdBanner slot="4444444444" format="rectangle" className="my-8" />
       </div>
 
+      {/* Practical guide */}
+      <section className="py-12">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <h2 className="mb-8 text-center text-2xl font-bold text-gray-900 dark:text-white">Practical guide for {tTitle}</h2>
+          <div className="grid gap-5 lg:grid-cols-2">
+            <div className="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-950">
+              <h3 className="mb-3 font-semibold text-gray-900 dark:text-white">Example use case</h3>
+              <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">{guide.example}</p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-950">
+              <h3 className="mb-3 font-semibold text-gray-900 dark:text-white">Settings explained</h3>
+              <ul className="space-y-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                {guide.settings.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-950">
+              <h3 className="mb-3 font-semibold text-gray-900 dark:text-white">Limitations</h3>
+              <ul className="space-y-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                {guide.limitations.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-950">
+              <h3 className="mb-3 font-semibold text-gray-900 dark:text-white">Troubleshooting</h3>
+              <ul className="space-y-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                {guide.troubleshooting.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works */}
       <section className="bg-gray-50 py-16 dark:bg-gray-900">
         <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <h2 className="mb-10 text-center text-2xl font-bold text-gray-900 dark:text-white">{dict.toolPage.howItWorks}</h2>
           <div className="grid gap-8 sm:grid-cols-3">
-            {[
-              { step: "1", title: dict.toolPage.step1Title, desc: dict.toolPage.step1Desc },
-              { step: "2", title: dict.toolPage.step2Title, desc: dict.toolPage.step2Desc },
-              { step: "3", title: dict.toolPage.step3Title, desc: dict.toolPage.step3Desc },
-            ].map((item) => (
-              <div key={item.step} className="text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-lg font-bold text-purple-600 dark:bg-purple-900/50 dark:text-purple-400">{item.step}</div>
-                <h3 className="mb-2 font-semibold text-gray-900 dark:text-white">{item.title}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{item.desc}</p>
+            {guide.steps.map((item, index) => (
+              <div key={item.name} className="text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-lg font-bold text-purple-600 dark:bg-purple-900/50 dark:text-purple-400">{index + 1}</div>
+                <h3 className="mb-2 font-semibold text-gray-900 dark:text-white">{item.name}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{item.text}</p>
               </div>
             ))}
           </div>

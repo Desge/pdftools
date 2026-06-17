@@ -8,7 +8,10 @@ import dynamic from "next/dynamic";
 const LoadingSkeleton = () => (
   <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 p-12 text-center dark:border-gray-800 dark:bg-gray-900" aria-busy="true" role="status">
     <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-purple-600" />
-    <p className="text-sm text-gray-500">Loading tool...</p>
+    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Preparing the local PDF workspace</p>
+    <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+      The instructions, FAQ, privacy notes, and related tools are already available while the browser-only editor initializes.
+    </p>
   </div>
 );
 

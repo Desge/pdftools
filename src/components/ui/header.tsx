@@ -135,6 +135,11 @@ function LocaleSwitcher({ current }: { current: string }) {
       : "/";
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLocale = e.target.value;
+    // 写入共享 cookie（所有 toolconv.com 子域可读取）
+    try {
+      localStorage.setItem('toolconv_lang', newLocale);
+      document.cookie = `toolconv_lang=${newLocale};domain=.toolconv.com;path=/;max-age=31536000;SameSite=Lax`;
+    } catch { /* ignore */ }
     const newPath = path === "/" ? `/${newLocale}/` : `/${newLocale}${path.startsWith("/") ? path : "/" + path}`;
     window.location.href = newPath;
   };

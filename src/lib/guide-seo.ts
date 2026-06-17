@@ -1,22 +1,34 @@
 // ─── SEO Utilities for Guides ───
 import type { Metadata } from "next";
 import { SITE_URL, hreflangAlternates, ogLocale } from "./seo";
-import type { GuideEntry } from "./guides";
+import { getGuideLocales, hasGuideLocale, type GuideEntry } from "./guides";
+
+function guideHreflangAlternates(guide: GuideEntry): NonNullable<Metadata["alternates"]>["languages"] {
+  const path = `/guides/${guide.slug}/`;
+  return {
+    "x-default": `${SITE_URL}/en${path}`,
+    ...Object.fromEntries(getGuideLocales(guide).map((loc) => [loc, `${SITE_URL}/${loc}${path}`])),
+  };
+}
 
 /** SEO metadata for a guide page */
 export function guideMeta(guide: GuideEntry, locale: string = "en"): Metadata {
   const content = guide.content[locale] || guide.content.en;
+  const isLocalized = hasGuideLocale(guide, locale);
   const title = content.title;
   const desc = content.description;
-  const url = `${SITE_URL}/${locale}/guides/${guide.slug}/`;
+  const url = isLocalized
+    ? `${SITE_URL}/${locale}/guides/${guide.slug}/`
+    : `${SITE_URL}/en/guides/${guide.slug}/`;
 
   return {
     title,
     description: desc,
     keywords: content.keywords,
+    robots: { index: isLocalized, follow: true },
     alternates: {
       canonical: url,
-      languages: hreflangAlternates(`/guides/${guide.slug}/`, locale),
+      languages: guideHreflangAlternates(guide),
     },
     openGraph: {
       title: `${title} | toolconv`,

@@ -54,9 +54,11 @@ export default async function GuidesListPage({
                 <a
                   key={guide.slug}
                   href={`${prefix}/guides/${guide.slug}/`}
-                  className="group block rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-lg hover:-translate-y-1 dark:border-gray-800 dark:bg-gray-900"
+                  className="group block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-colors duration-200 hover:border-purple-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-purple-700"
                 >
-                  <div className="mb-4 text-4xl">{guide.icon}</div>
+                  <div className="mb-4 text-xs font-semibold uppercase tracking-wide text-purple-600 dark:text-purple-400">
+                    {guide.label}
+                  </div>
                   <h2 className="mb-2 text-lg font-bold text-gray-900 group-hover:text-purple-600 dark:text-white dark:group-hover:text-purple-400">
                     {content.title}
                   </h2>

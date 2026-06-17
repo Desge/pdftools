@@ -28,7 +28,7 @@ export async function generateMetadata({
   const { locale, formats } = await params;
   const slug = formats.join("-to-");
   const pair = ALL_CONVERSIONS.find((c) => c.slug === slug);
-  if (!pair) return {};
+  if (!pair || !pair.clientSide || pair.quality < 3) return {};
   const meta = conversionMeta(pair, locale);
   // Use locale-aware name for conversion page title
   const dict = t(locale);
@@ -46,7 +46,7 @@ export default async function ConversionPage({
   const { locale, formats } = await params;
   const slug = formats.join("-to-");
   const pair = ALL_CONVERSIONS.find((c) => c.slug === slug);
-  if (!pair) notFound();
+  if (!pair || !pair.clientSide || pair.quality < 3) notFound();
 
   const dict = t(locale);
   const prefix = `/${locale}`;
@@ -189,7 +189,7 @@ export default async function ConversionPage({
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <h2 className="mb-6 text-center text-xl font-bold text-gray-900 dark:text-white">{dict.convert.relatedConversions}</h2>
           <div className="flex flex-wrap justify-center gap-2">
-            {ALL_CONVERSIONS.filter((c) => c.slug !== pair.slug && (c.from.ext === pair.from.ext || c.to.ext === pair.to.ext))
+            {ALL_CONVERSIONS.filter((c) => c.clientSide && c.quality >= 3 && c.slug !== pair.slug && (c.from.ext === pair.from.ext || c.to.ext === pair.to.ext))
               .slice(0, 12)
               .map((c) => (
                 <a key={c.slug} href={`${prefix}/convert/${c.slug}/`} className="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 transition-colors hover:border-purple-300 hover:text-purple-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-purple-700 dark:hover:text-purple-400">
